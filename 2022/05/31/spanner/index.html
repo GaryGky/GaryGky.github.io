@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Spanner: Google’s Globally-Distributed Database前言：个人感觉这篇paper组织的逻辑比 Dynamo和GFS 难理解一些，因为时而讲存储引擎层的内容，时而讲存储Service层的内容。笔者按照自己的逻辑重新组织了一下文章，希望能够帮助读者更好的理解Spanner。 推荐阅读：为了更好的体验，请移步至飞书 Spanner. 特征  可扩展的 基于多版本">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spanner">
+<meta property="og:url" content="https://garygky.github.io/2022/05/31/spanner/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="Spanner: Google’s Globally-Distributed Database前言：个人感觉这篇paper组织的逻辑比 Dynamo和GFS 难理解一些，因为时而讲存储引擎层的内容，时而讲存储Service层的内容。笔者按照自己的逻辑重新组织了一下文章，希望能够帮助读者更好的理解Spanner。 推荐阅读：为了更好的体验，请移步至飞书 Spanner. 特征  可扩展的 基于多版本">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/spanner.png">
+<meta property="article:published_time" content="2022-05-31T13:25:08.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.466Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Distributed Storage">
+<meta property="article:tag" content="NoSQL">
+<meta property="article:tag" content="Google">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/spanner.png">
+  
+  
+  
+  <title>spanner - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/sunset.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="spanner"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-05-31 21:25" pubdate>
+          May 31, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.6k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          39 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">spanner</h1>
+            
+            <div class="markdown-body">
+              
+              <p>Spanner: Google’s Globally-Distributed Database<br>前言：个人感觉这篇paper组织的逻辑比 Dynamo和GFS 难理解一些，因为时而讲存储引擎层的内容，时而讲存储Service层的内容。笔者按照自己的逻辑重新组织了一下文章，希望能够帮助读者更好的理解Spanner。</p>
+<p>推荐阅读：为了更好的体验，请移步至飞书 <a target="_blank" rel="noopener" href="https://lo845xqmx7.feishu.cn/docs/doccnALxkfZlATXInaIF2BcyMUf">Spanner</a>.</p>
+<p>特征</p>
+<ul>
+<li>可扩展的</li>
+<li>基于多版本读 (MVCC) </li>
+<li>基于两阶段锁的写 (2PL)</li>
+<li>同步复制</li>
+<li>提供 Externally Consistent<br>Spanner 简介<br>Spanner是一个基于Paxos的，支持数据分片的全球部署的强一致数据库。<br>即使在极端自然灾害下，Spanner能够对上层应用提供高可用的服务，因为Spanner的数据是跨大陆存储的。F1 Google 是Spanner最初的用户，它为实现HA在美国部署了5个分片。<br>大多数应用对于HA的要求基本是能够容忍1-2个DC断电，根据Paxos算法 (N &#x3D; 2F + 1)，Spanner只需要提供 3-5 个服务节点就可以满足Fault Tolerance的需求。</li>
+</ul>
+<p>Spanner 主要的关注点在于跨机房的数据同步。</p>
+<ul>
+<li>对比Bigtable，Spanner能够提供DB级别更好的支持：<ul>
+<li>支持更加复杂的数据Schema；</li>
+<li>在全球化部署的同时保证强一致性；</li>
+</ul>
+</li>
+<li>对比MegaStore，Spanner提供更为高级的支持有：<ul>
+<li>在支持同步复制的基础之上，提供更高的读写吞吐；<br>此外，Spanner还能为数据提供多版本的读写，每个版本通过一个TimeStamp来标识。旧版本的数据可以通过配置化的GC来回收，释放存储空间。Spanner提供的是类SQL接口，并且支持ACID的事务操作。<br>Spanner作为一个全球部署的数据库，其实考虑了边缘计算的概念，比如：用户可以访问最近的副本来读取数据（数据是强一致的，所以总是能读到最新的数据）；并且能够支持配置每一个DC存储的数据，数据距离用户的距离（提升读速率），多副本之间的距离（提升写速率），以及维护多少个数据副本。<br>Spanner作为一个分布式的数据库，提供了两个非常宝贵的功能：</li>
+</ul>
+</li>
+<li>支持 Externally Consistency (我认为可以理解为 Linearizable)；</li>
+<li>支持全球的用户同一个时刻读到一致的数据。<br>对于如此高级别的一致性提供保障最重要的一个功能是 TimeAPI，Google通过原子钟和卫星授时服务保证每个节点都能获得一个 &lt;10ms 的时间戳，这个时间区间成为 Clock Uncertainty ，服务节点在CU内是需要阻塞请求的。<br>Spanner 架构简介</li>
+<li>Zone：Spanner 是通过Zones来进行管理的，每一个Zone是最小的管理单元，也是数据复制的范围（Replicas只能分布在同一个Zone中）</li>
+<li>ZoneMaster：主要负责与Server交互，每一个Zone会有一个ZoneMaster主管数据的分配以及副本管理。</li>
+<li>Location Proxy：主要负责与Client交互，告知Client SpannerServer的信息。</li>
+<li>UniverseMaster 我理解主要是一个控制台和可视化界面。</li>
+<li>Placement Driver 主要负责数据的迁移和心跳检测。<br>ZoneMaster + Location Proxy  + Placement Driver 几乎等于GFS中Master Server的功能。</li>
+</ul>
+<p>Storage Arch<br>首先每一个Replica中存储的数据是形如：<br>(key:string, timestamp:string) -&gt; value:string</p>
+<p>（存储层）支持的数据结构比较单一，只有String类型；每一个Replica中都存放了成百上千个tablet，每一个tablet中又存放了大量的KV键值对。Tablet是在分布式文件系统Colossus持久化的，通过一种类似于B树的文件形式存储，使用WAL来保证故障恢复。<br>（业务层）每一个Replica都是运行在一个Paxos Server上的，保存相同数据的Replica构成一个Replicas Group，Replica Group会选择一个Leader对外提供一致性的读写服务。<br>对于Leader的任期，在Spanner的版本中会给Leader发一个默认10s 的Lease，在这10s内都会以持有Lease的服务节点为Leader，用于防止Split Brain。<br>Leader上会额外存储两个数据结构：</p>
+<ul>
+<li>Lock Table：用来表示Key Range的上锁状态。2PL：因为Spanner和Bigtable一样都需要满足对于长事务的支持，长事务如果使用MVCC这样的乐观并发控制性能会比较差，因为需要解决MultiVersion的冲突，导致事务不断地 Abort - Retry。所以基于悲观控制的方法来做长事务是一个Trade-Off的选择。</li>
+<li>Transaction Manager：用于协调分布式事务。2PC：直接充当了2PC中的Coordinator，用来发布Prepare 和 Commit 的命令。</li>
+</ul>
+<p>Replication<br>Spanner 数据模型的概念比较 多 &#x2F; 复杂，需要仔细分析。<br>我理解在Spanner 中， Directory 相当于是分布式系统中的 Partition，也等于是数据最小的移动单位。一个Directory 是一系列拥有共同前缀的 Key组成的。<br>Spanner 一个Paxos Group管理一个Tablet，一个Tablet是许多Directory的组合（为了利用空间局部性原理，将经常被同时访问的Key 在物理上就近存储）。<br>从应用层的视角来看，Dir是数据存放的最小单位，APP在写入数据的时候可以通过 Tag的方式指定Dir，这样就能将数据写入到不同的Region中。<br>在Dir内部，还有一个更细粒度的数据存储单元：Fragment，当Dir数据过大的时候，会被拆分为不同的Fragment，不同的Fragment由不同的Paxos Group存储。</p>
+<p>感觉这块内容描述得过于细致了，理解起来有点困难。。</p>
+<p>Data Model<br>Spanner 暴露的接口为：半关系型的数据模型，类SQL接口，事务。Spanner对于事务和半关系型数据模型的支持很大程度是受MegaStore启发的，因为在谷歌内部，APP通常在MegaStore 和 BigTable选型的时候，会因为MegaStore对于跨机房同步的支持是同步，强一致的，而选择MegaStore；即使MegaStore的性能会因为一致性而受到削弱。<br>在对于事务的支持上：Spanner 的作者认为，即使2PC带来的性能损失比较大，但是不能总是让业务在无事务的存储层上编码，建议是业务层应该通过一些方式规避2PC带来的性能瓶颈。BigTable就是因为对cross-row的事务支持不够完善而饱受诟病，Google 内部为了解决BigTable对于事务的缺失，专门开发了一套叫做 Perlocate 的系统。（据笔者了解，PingCAP很多产品 (TiDB &#x2F; TiKV) 仍然使用Perlocate的方案来支持事务。）<br>Spanner暴露给用户的的存储结构是类似传统关系型数据库的，row, columns, SQL-Like Query 等等，但底层的存储却是一种KV的模型：通过每一个Row的PrimaryKey映射到其他Columns。<br>$$(PrimaryKey -&gt; (V1, V2, V3 …))$$<br>并且PrimaryKey是按照某种规则组成的自增唯一Key （索引）。<br>以下为一个用户存储的照片元信息对应的例子，从图中可以观察到 Spanner的接口语言，存储结构。</p>
+<p>TrueTime<br>时间是一个很特殊的物理量，我们通常看到的时间只是时间的观察值，而不是时间的绝对值。</p>
+<p>三个API<br>TT.now() -&gt; int[]: TTInterval: [earliest, latest]<br>TT.after(t) -&gt; bool: true if t has definitely passed<br>TT.before(t) _&gt; bool: true if t has definitely not arrived</p>
+<p>这里需要强调一下的是，在TrueTime这里的授时不是一个确定的时间（与我们通常从电脑&#x2F;手机&#x2F;手表上看到的时间不同）。TT返回的是一个不确定的时间范围。<br>对于一个写事务 w 来说，它提交的时间 无法复制加载中的内容满足：无法复制加载中的内容。</p>
+<p>时间的来源<br>TT 的时间来源于两个方面，GPS和原子钟</p>
+<ul>
+<li>GPS：主要受限于信号传递有可能会失败的影响；</li>
+<li>原子钟：原子震荡可能产生误差，使其与真实的时间相差较大。<br>TrueTime 架构<br>无法复制加载中的内容<br>整体的TrueTime 架构如图所示，每个DataCenter中包含一个TimeMaster 集群用于给Spanner Server提供时间。每个Spanner Server会启动一个Daemon 进程，每隔30s向TimerMaster发起时间 Poll，用于更新本地最新的时间。TimerMaster内部会通过一些补偿机制来调整自己的时间，使得各个机器的时间误差尽可能小，在此不赘述了，感兴趣的话可以参考Google Spanner 白皮书。<br>并发控制 &#x2F;&#x2F; Concurrency Control<br>Spanner为了支持分布式事务，对于不同的事务类型：Read-Write &#x2F; Read-Only 采用了不同的策略；为了实现强一致，在事务隔离级别的基础之上加入了绝对时间，将事务执行的效率大大提升。<br>不得不引出一段经典名言：<br>We believe it is better to have application programers deal with performance problems due to overuseof transactions as bottleneck arise, rather than always coding around the lack of transactions.</li>
+</ul>
+<p>Read Write Transaction</p>
+<ul>
+<li>2PL </li>
+<li>2PC</li>
+<li>Timestamp: Commit Time<br>Read Only Transaction</li>
+<li>Snapshot + TrueTime</li>
+<li>Timestamp: Start Time<br>总结：分布式系统时钟授时方案<br>分布式系统中，主要有两种授时的方式：</li>
+<li>通过网络授时，不同节点之间可能会存在网络延迟；</li>
+<li>通过石英震荡产生时间，但石英震荡会产生较大的误差；<br>所以想要通过物理时钟来构建一个全序（以时间为比较单位）的分布式节点集合是不够的。基于此，谷歌为业界提供了几种解决思路:<br>Spanner: True Time方案，通过给每一个分布式节点配备一个GPS时间校准和原子钟硬件，来对接国际标准时间，并且通过卫星通信的方式进行授时，以及通过集群中的原子钟来提供双保险。<br>集中授时服务TSO：通过集群内一个发号器获取自增长的逻辑时间，为了避免单点故障，这个发号器通常使用Paxos来构成一个Group互相备份。(TiDB 使用的方案)<br>混合逻辑时钟HLC：可以保证同一个进程内部事件的时钟顺序，但是解决不了系统外事件发生的逻辑前后顺序与物理时间前后顺序的一致性，因此做不到: Linearizability and external consistency.</li>
+</ul>
+<p>Reference</p>
+<ul>
+<li>Google F1</li>
+<li>MegaStore</li>
+</ul>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+      
+        <a href="/tags/NoSQL/">#NoSQL</a>
+      
+        <a href="/tags/Google/">#Google</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>spanner</div>
+      <div>https://garygky.github.io/2022/05/31/spanner/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>May 31, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/03/OnceInterviewPreparation/" title="记一次面试算法题准备过程">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">记一次面试算法题准备过程</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/05/22/MapReduce/" title="MapReduce">
+                        <span class="hidden-mobile">MapReduce</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

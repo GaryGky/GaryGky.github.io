@@ -1,0 +1,839 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="IntroductionScenario Distributed locks are a very useful primitive in many environments where different processes must operate with shared resources in a mutually exclusive way.  Developers want to en">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Distributed Lock">
+<meta property="og:url" content="https://garygky.github.io/2022/06/10/DistributedLock/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="IntroductionScenario Distributed locks are a very useful primitive in many environments where different processes must operate with shared resources in a mutually exclusive way.  Developers want to en">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/redis-go.webp">
+<meta property="article:published_time" content="2022-06-10T02:35:23.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.462Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Distributed System">
+<meta property="article:tag" content="Distributed Storage">
+<meta property="article:tag" content="NoSQL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/redis-go.webp">
+  
+  
+  
+  <title>Distributed Lock - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/lighthouse.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Distributed Lock"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-10 10:35" pubdate>
+          June 10, 2022 am
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          90 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Distributed Lock</h1>
+            
+            <div class="markdown-body">
+              
+              <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><h2 id="Scenario"><a href="#Scenario" class="headerlink" title="Scenario"></a>Scenario</h2><blockquote>
+<p>Distributed locks are a very useful primitive in many environments where different processes must operate with shared resources in a mutually exclusive way.</p>
+</blockquote>
+<p>Developers want to ensure that a shared resource (which can be an operation Update, or some content Read) on multi-instance nodes in the cluster can only be shared by one client at a time ( <strong>mutual exclusion</strong> ).</p>
+<p>After reading the debate between Martin Kleppmann (DDIA Author) and Antirez (Father of Redis ) on whether the Redlock algorithm is safe, it is found that the application of distributed locks can actually be divided into different business scenarios:</p>
+<ul>
+<li><p>Efficiency: Using distributed locks can prevent different nodes from repeating the same work, but if the lock occasionally fails, it will not bring too severe impact. For example: a <strong>verification code</strong> is repeatedly sent.</p>
+</li>
+<li><p>Correctness: The business expects that under no circumstances will there be an error situation, because once it happens, it will have a huge impact. For example: repeat transactions (deductions &#x2F;additions ).</p>
+</li>
+</ul>
+<p>Based on the above analysis, the implementation of distributed locks usually has two schemes based on Redis and ZK to my knowledge. Their comparison is shown in the following table:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>强一致</th>
+<th>高可用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>典型组件</td>
+<td>ETCD, ZooKeeper, Chubby</td>
+<td>Redis, Abase</td>
+</tr>
+<tr>
+<td>时延 (Latency)</td>
+<td>跨洋RTT 200ms</td>
+<td>国内多机房 2ms 一次读写</td>
+</tr>
+<tr>
+<td>优点</td>
+<td>不会出现数据不一致的问题</td>
+<td>脑裂切换的时候可能会出现不一致</td>
+</tr>
+<tr>
+<td>缺点</td>
+<td>延迟和吞吐受限</td>
+<td>延迟极低，吞吐极大</td>
+</tr>
+</tbody></table>
+<p>The selection of distributed locks is based on the concept of a certain component at the beginning of the design. For example, the Redis distributed solution is designed to be a highly available model at the beginning. According to CAP, however, by consulting the official doc of Redis , I found that there are actually many open source practices that have introduced additional algorithms on top of the basic version of Redis to achieve business expectations.</p>
+<h3 id="Distributed-Lock-Principle-x2F-Rules"><a href="#Distributed-Lock-Principle-x2F-Rules" class="headerlink" title="Distributed Lock Principle &#x2F; Rules"></a>Distributed Lock Principle &#x2F; Rules</h3><ul>
+<li><p><strong>Mutex (Consistency)</strong>: At Anytime, there’s only one client can have the lock.</p>
+</li>
+<li><p>Safety: Avoid deadlock, when client failover blocking the lock, the lock should be release as well.</p>
+</li>
+<li><p><strong>Availability:</strong> Avoid standalone service, when the master node failover, there must be some follower node can take over and continue providing service.</p>
+</li>
+<li><p>Reentran: For the same lock, only the process that acquired the lock can release the lock.</p>
+</li>
+</ul>
+<h2 id="Related-Work"><a href="#Related-Work" class="headerlink" title="Related Work"></a>Related Work</h2><h3 id="Strong-Consistency-Distributed-Lock"><a href="#Strong-Consistency-Distributed-Lock" class="headerlink" title="Strong Consistency Distributed Lock"></a>Strong Consistency Distributed Lock</h3><p>Based on strong consistency, we will have ZooKeeper, etcd , and Google’s Chubby. In these implementations, ZK is based on the ZAB consensus algorithm and etcd is based on Raft. On the other hand, although Google proposed <a target="_blank" rel="noopener" href="https://research.google.com/archive/chubby-osdi06.pdf">chubby </a>in the paper, the open source code has not been published, so Chubby is generally not used as a distributed lock solution, and Chubby has an open source version called ZooKeeper.</p>
+<p>Chubby&#x2F; ZK is inspired by the file system and designed as a service for <strong>metadata management</strong> . Different from large files, these two systems are designed for small data, usually the data volume should be below 10G. Chubby internally achieves consistency through Paxos, and ZK ensures internal consistency through ZAB.</p>
+<p>In addition to metadata management, ZK also supports the following:</p>
+<ul>
+<li><p>Distributed lock</p>
+</li>
+<li><p>Coordination services: For example, the Master in the MapReduce can be implemented in ZK to issue tasks to idle workers.</p>
+</li>
+<li><p>“Sequencer”: write sequentially</p>
+</li>
+</ul>
+<p>For Raft-based etcd , it is clear that throughput and latency are limited by the performance of the Raft Group Leader. If we deploy our services across continents or IDCs , e.g. VA , SG , RU , EU  TTP , etc. The entire system must do transoceanic network transmission for communication. No matter where the leader is, the Follower must go far away to synchronize the RaftLog from the leader, so the performance will be very low.</p>
+<blockquote>
+<p>I have discussed with one of my friends who’s from Tsinghua University about this problem and he provides me some basic insights that Leaderless &#x2F; Multi-Leader Architecture might be able to ease this high latency problem.</p>
+</blockquote>
+<p>For ZAB-based ZooKeeper, its latency should be smaller than ETCD , and the throughput should also meet the needs of the business. But from the monitoring point of view, SG ‘s cluster does not have much traffic, so it is speculated that the usage in SG’s business should not be very large and the infra support is not quite well.</p>
+<h4 id="etcd-Distributed-Lock-Implementation"><a href="#etcd-Distributed-Lock-Implementation" class="headerlink" title="etcd Distributed Lock Implementation"></a>etcd Distributed Lock Implementation</h4><blockquote>
+<p>KV Pair form to do the lock, based on Raft guarantee Linearizability, high latency, in fact, the company’s internal support scheme for ETCD and ByteKV similar.</p>
+</blockquote>
+<p>I feel that the performance of these strongly consistent locks is very related to the deployment method, and it is impossible to generalize which method will be better than the other. And the fineness of different business scenarios is not the same. To my knowledge, business operations scenarios do not require very high mutual exclusion of critical sections, or there are some fall back strategies, which can reduce the dependence on strong consistency. Because the probability of the consistency problem of highly available distributed locks is relatively small after all, it may be painful to choose a strongly consistent KV with low availability for small probability events.</p>
+<p>Etcd provides Lock API：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs vim">LOCK [<span class="hljs-keyword">options</span>] <span class="hljs-symbol">&lt;lockname&gt;</span> [<span class="hljs-keyword">command</span> arg1 arg2 ...]<br></code></pre></td></tr></table></figure>
+
+<p>Description：LOCK acquires a distributed mutex with a given name. Once the lock is acquired, it will be held until <strong>etcdctl</strong> is terminated.</p>
+<p>Options:</p>
+<ul>
+<li>ttl - time out in seconds of lock session. (Default Value: 60s).</li>
+</ul>
+<p>If the client side does not release the lock due to some problem, other processes will be blocked by the time of the TTL . The default time of the TTL is 60s, which means that the lock service is unavailable during these 60s.</p>
+<h4 id="ZK-Distributed-Lock-Implementation"><a href="#ZK-Distributed-Lock-Implementation" class="headerlink" title="ZK Distributed Lock Implementation"></a>ZK Distributed Lock Implementation</h4><p>Based on ZNode, the only way to use file namespace to do Mutex, based on the ZAB protocol to ensure synchronization between replicas, the delay is lower than that of Raft (further investigation is required).</p>
+<p>The following code is written based on the understanding of Chubby. Maybe ZK will be slightly different. I only have limited time to look at ZK for the time being. I wrote it according to the previous understanding of Chubby’s paper.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Go">x = Open(<span class="hljs-string">&quot;/$&#123;PSM&#125;/$&#123;biz_content&#125;/resource_key&quot;</span>)<br><span class="hljs-keyword">if</span> TryAcquire(x) == ok &#123;<br>    <span class="hljs-comment">// Lock Success</span><br>    SetContents(x, resource_random_value)<br>    reply(ok)<br>&#125;<span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-comment">// Lock failed</span><br>    reply(err)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="HA-Distributed-Lock"><a href="#HA-Distributed-Lock" class="headerlink" title="HA Distributed Lock"></a>HA Distributed Lock</h3><p>Based on the idea of High Availability, we will have Redis (-liked) storage system. Redis is the typical implementation in the industry. Though it might contradict with the principle idea of distributed lock, some programmers consider this mechanism due to easy implementation, low latency but sacrifice some consistency on the application layer. In which, the application has to ensure that even when there are some mistakes like two process enter the <strong>critical region</strong>, the application won’t reveal some mistakes.</p>
+<h4 id="3-2-1-Redis-Distributed-Lock-Implementation-StandAlone"><a href="#3-2-1-Redis-Distributed-Lock-Implementation-StandAlone" class="headerlink" title="3.2.1 Redis Distributed Lock Implementation (StandAlone)"></a>3.2.1 Redis Distributed Lock Implementation (StandAlone)</h4><ul>
+<li><strong>Acquire Lock</strong></li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Shell">SET resource_key resource_random_value NX PX 30000<br>SETNX<br>EXpire<br></code></pre></td></tr></table></figure>
+
+<ol>
+<li><p>PX: Add a TTL to the lock: To prevent deadlock when client acquires lock then permanently failover.</p>
+</li>
+<li><p>NX: To ensure mutex in distributed lock which means that only when <code>resource_key</code>  is not exist, the process can acquire the lock.</p>
+</li>
+<li><p><code>resource_random_value</code>: some unique identifier which denotes the owner of the distributed lock to prevent process A wrongly release the lock own by process B.</p>
+</li>
+</ol>
+<p><strong>Counter Example:</strong></p>
+<p>![AcLock](..&#x2F;img&#x2F;tech&#x2F;Distributed Lock&#x2F;AcLock.jpg)</p>
+<ul>
+<li><strong>Release Lock</strong></li>
+</ul>
+<p>The unlock operation is like a CAD (Compare and Delete) command, where the redis should maintain its atomic semantics.</p>
+<ul>
+<li><p>In Redis, we can use LUA script to implement this.</p>
+</li>
+<li><p>In ByteDance Redis, they provide a CAD command for the client to use.</p>
+<ul>
+<li>For details of CAD: Refer to <a target="_blank" rel="noopener" href="https://site.bytedance.net/docs/2707/3269/88129/#cad">Kv_Redis_CAD</a></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs Shell">if redis.call(&quot;get&quot;,KEYS[1]) == ARGV[1] then<br>    return redis.call(&quot;del&quot;,KEYS[1])<br>else<br>    return 0<br>end<br></code></pre></td></tr></table></figure>
+
+<p>![AcLock](..&#x2F;img&#x2F;tech&#x2F;Distributed Lock&#x2F;RlsLock.jpg)</p>
+<h3 id="Redis-Distributed-Lock-Cluster-Redlock"><a href="#Redis-Distributed-Lock-Cluster-Redlock" class="headerlink" title="Redis Distributed Lock (Cluster + Redlock)"></a>Redis Distributed Lock (Cluster + Redlock)</h3><p>As can see from last part, the problem for <strong>Naive Redis</strong> Distributed Lock is the inconsistency during <strong>Leader Transfering</strong>. There has been a Algorithm, Redlock, proposed by Antires (father of Redis), might be able to handle this problem. The typical flow is described as below:</p>
+<p>Assume that there are five node in a Redis Cluster, in order to acquire lock, the client performs the following operations:</p>
+<ol>
+<li><p>START: Gets the current timestamp.</p>
+</li>
+<li><p>It tries to acquire locks in all the N instances sequentially, using the command described in 3.2.1. The client will set a small timeout compare to the valid time of lock. For example, if the TTL for lock is 10s, then the timeout for client waiting for nodes’ reply may be around 5-50 ms. This prevents client waiting nodes’ reply for so long and when there’s a instance timeout, the client should immediately try next node in Redis Cluster.</p>
+</li>
+<li><p>After step:2 success, the client compute the current timestamp, END and minus START for the time of acquiring lock. If the time is under lock valid time and there are majority nodes reply <code>ok</code> of step:2 THEN</p>
+</li>
+<li><p>If the lock was successfully acquired, its validity time is considered to be the initial validity time minus the time elapsed in step:3.</p>
+</li>
+<li><p>If the client failed to acquire the lock <code>(END-START &gt; Lock valid time || less then majority nodes reply ok)</code>, then the client will try to unlock all the instances.</p>
+</li>
+</ol>
+<p><strong>[Clock Drift]</strong></p>
+<p>The <a target="_blank" rel="noopener" href="https://lamport.azurewebsites.net/pubs/time-clocks.pdf">time</a> in Distributed System is not reliable due to network delay or atomic drifting. So any service that deploys across different server cannot rely on the TRUETIME assumption.</p>
+<p>The <a target="_blank" rel="noopener" href="https://redis.io/docs/reference/patterns/distributed-locks/">original redlock post</a> states that the algorithm do not rely on synchronized clock and take clock drift in distributed system into account.</p>
+<p><strong>[Retry on Failure]</strong></p>
+<p>After the client fails to acquire the lock, it should sleep for a while so that other client will not synchronizing acquire lock which might give rise to a split brain (where no client can acquire the lock). Ideally, the client should try to send the SET command using multiplexing.</p>
+<p><strong>[More Reliable]</strong></p>
+<p>The client can extend the lock’s TTL during the computation of lock’s valid time. By sending an extension command with LUA script to all the instances that the key exist on, the client can extend the liveness of the lock, but should be stay within the validity time.</p>
+<p><strong>[Performance, Crash Recovery and Fsync]</strong></p>
+<ul>
+<li>Persistence</li>
+</ul>
+<p>Without persistence, the lock service cannot guarantee that mutex semantic. For example, when client A acquires the lock in 3 in 5 instances and one of the instances restarted, then we will have 3 instances are lock-free at this point.</p>
+<p>AOF: Redis by default will fsync to disk by every seconds, it is possible that after a  restart, the lock key is missing. In theory, if we want to ensure any kind of instance start, we need to enable <code>fsync=always</code> but will affect performance due to DiskIO.</p>
+<ul>
+<li>Delay Restart</li>
+</ul>
+<p>To guarantee that there’s no two instance acquire lock at the same time, we can implement delay restart mechanism in which the shutdown server can only restart after <code>TTL</code>. After it recover, all servers is clean and can be locked.</p>
+<p>But there’s downsides for this strategy when there are too many servers shutdown within <code>TTL</code> so that the lock service is unavailable for at least <code>TTL</code>.</p>
+<p>More Information about Redlock: There’s a famous debate session within this topic between Martin Kleppmann (Distributed System Expert) and <a target="_blank" rel="noopener" href="http://antirez.com/">Antirez</a> (Father of Redis).</p>
+<h4 id="Analysis-of-Redlock"><a href="#Analysis-of-Redlock" class="headerlink" title="Analysis of Redlock"></a>Analysis of Redlock</h4><p>Martin Kleppmann <a target="_blank" rel="noopener" href="http://martin.kleppmann.com/2016/02/08/how-to-do-distributed-locking.html">analyzed Redlock here</a>. A counterpoint to this analysis can be <a target="_blank" rel="noopener" href="http://antirez.com/news/101">found here</a>.</p>
+<h2 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h2><ul>
+<li>Regarding distributed locks, the solutions that are better supported within the company can be distinguished according to high availability and strong consistency scenarios<ul>
+<li>High Availability Scenario: With Redis , businesses need to be compatible with inconsistent events with low probability.</li>
+<li>Strongly consistent scheme: Using ByteKV :<ul>
+<li>For a single cluster across the room, the business needs to tolerate the delay of Raft synchronization across the room.</li>
+<li>For multi-cluster cross-room, the business needs to tolerate that the service cannot write data to the leader of multiple clusters at the same time, otherwise unpredictable errors will occur.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Personally speaking, I think a better solution is to align with the overall service structure + business scenario, because different service structures may require different TradeOff, and different business scenarios have different preferences for different scenarios. But overall, through this survey, about a week before and after, I gained some understanding of the company and open source projects, including: ByteKV , ZooKeeper, Chubby, Redis , ETCD ; also let me The concept of distributed locks and business selection TradeOff has more experience.</p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Distributed-System/">#Distributed System</a>
+      
+        <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+      
+        <a href="/tags/NoSQL/">#NoSQL</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Distributed Lock</div>
+      <div>https://garygky.github.io/2022/06/10/DistributedLock/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>June 10, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/06/SegmentQuery/" title="SegmentQuery">
+                        <span class="hidden-mobile">SegmentQuery</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

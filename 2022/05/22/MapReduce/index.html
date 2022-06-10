@@ -1,0 +1,748 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="MapReduceAbstract: A high-level idea of Map-Reduce  Map用户使用Map函数计算出一系列的中间 K-V pairs ReduceReduce 函数在对所有的中间K-V Pairs进行聚合（Merge）操作假设给我十个数组，让我找出每个数组的第五个元素，那么Map函数的作用就是找到每一个数组的第五个元素，Reduce函数就是将每个数组的第五个元素进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MapReduce">
+<meta property="og:url" content="https://garygky.github.io/2022/05/22/MapReduce/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="MapReduceAbstract: A high-level idea of Map-Reduce  Map用户使用Map函数计算出一系列的中间 K-V pairs ReduceReduce 函数在对所有的中间K-V Pairs进行聚合（Merge）操作假设给我十个数组，让我找出每个数组的第五个元素，那么Map函数的作用就是找到每一个数组的第五个元素，Reduce函数就是将每个数组的第五个元素进">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/mapreduce.jpeg">
+<meta property="article:published_time" content="2022-05-22T05:04:06.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.463Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Google">
+<meta property="article:tag" content="Distribtued System">
+<meta property="article:tag" content="Distributed Computing">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/mapreduce.jpeg">
+  
+  
+  
+  <title>MapReduce - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/sunrise.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="MapReduce"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-05-22 13:04" pubdate>
+          May 22, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.9k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          33 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">MapReduce</h1>
+            
+            <div class="markdown-body">
+              
+              <p>MapReduce<br>Abstract: A high-level idea of Map-Reduce</p>
+<ul>
+<li>Map<br>用户使用Map函数计算出一系列的中间 K-V pairs</li>
+<li>Reduce<br>Reduce 函数在对所有的中间K-V Pairs进行聚合（Merge）操作<br>假设给我十个数组，让我找出每个数组的第五个元素，那么Map函数的作用就是找到每一个数组的第五个元素，Reduce函数就是将每个数组的第五个元素进行聚合，得到一个新的数组。</li>
+</ul>
+<p>推荐阅读：为了更好的体验，请移步至飞书 <a target="_blank" rel="noopener" href="https://lo845xqmx7.feishu.cn/docs/doccnOSf3ldikYI6JOgdn5B6Gac">MapReduce</a></p>
+<p>Introduction<br>Google对于处理大数据做了上百种special-purpose 的优化，这些计算方法用来处理大量的原始数据，比如：文档爬虫，Web日志等；也用来计算各种类型的衍生数据，包括倒排索引，每天最经常出现的请求等等。<br>如果在可接受的时间内完成运算，如何处理并行计算，如何分发数据，如何处理错误…都对系统设计提出了很大的挑战。<br>Google的工程师在函数式编程的Map &amp; Reduce函数中获得了启发，并且将其应用到了大数据计算中，使得大量的计算能够并行而且通过重试来处理fault。<br>Outline</p>
+<ul>
+<li><p>Sec.2: 描述一些基本的编程模型 </p>
+</li>
+<li><p>Sec.3: MapReduce的基本接口实现</p>
+</li>
+<li><p>Sec.4: 优化</p>
+</li>
+<li><p>Sec.5: 实验</p>
+</li>
+<li><p>Sec.6: MapReduce在Google中的应用</p>
+</li>
+<li><p>Sec.7: 未来的发展方向<br>Programing Model<br>Example：统计文件中单词出现的数量</p>
+</li>
+<li><p>Map<br>The map function emits each word plus an associated count of occurrences, 1 in this example.<br>map(string key, string value):<br>  &#x2F;&#x2F; key: document name<br>  &#x2F;&#x2F; value: document content<br>  for word in value:<br>  EmitIntermediate(word, “1”)</p>
+</li>
+<li><p>Reduce<br>The reduce function sums all counts emitted for a particular word.<br>reduce(string key, Iterator values):<br>  &#x2F;&#x2F; key: a word<br>  &#x2F;&#x2F; values: a list of counts<br>  for v in values:<br>  result +&#x3D; ParseInt(v)<br>  Emit(AsString(result))</p>
+</li>
+</ul>
+<p>在概念上用户定义的Map和Reduce函数都有相关联的类型：<br>map(k1,v1) -&gt;list(k2,v2)<br>reduce(k2,list(v2)) -&gt;list(v2)</p>
+<p>Other Example</p>
+<ul>
+<li>Distributed Grep: Map函数将emit一行如果改行能够匹配用户定义的Pattern，Reduce函数将数据拷贝到输出Buffer中。</li>
+<li>Count URLAccess Frequency：类似单词统计，每次遇到URL，Map函数都会emit 1，Reduce函数将结果聚合得到 &lt;URL, total_count&gt;。</li>
+<li>Inverted Index (倒排索引)：Map函数emit (word, document ID), Reduce 函数对word进行聚合，得到 (word, list<Document ID>)<br>Implementation<br>Map-Reduce 整体工作流程</li>
+</ul>
+<p>用户能够决定将Input File分割成多个数据片段分发到不同的机器上进行处理，使用分区函数将Map产生的中间函数分布到不同的分区上进行执行，Reduce的调用也被分布到多台机器上执行，用户可以自定义分区函数和分区数量。<br>任务执行过程</p>
+<ol>
+<li>用户程序将输入文件划分为M块，通常每块的大小为16MB-64MB，然后在Cluster上创建大量的程序副本。（注意是程序副本而不是数据副本）</li>
+<li>其中一个程序是特殊的，作为Master对其他所有的副本程序 (Worker) 发起控制请求；Master总共有M个Map任务和R个Reduce任务将一一分配给空闲的Worker。</li>
+<li>Worker被分配任务后会读取输入文件对应的 split，并执行Map函数，中间结果被保留在内存缓冲区中。</li>
+<li>Worker会将中间结果周期性的写入磁盘，并且按照Partition函数划分为R个区域，并且将文件在磁盘上的位置返回给Master。</li>
+<li>当Reduce Worker收到来自Master的处理请求后，会向Master发来的Location发起RPC调用，读取磁盘的数据。在收到磁盘数据之后，会先对key进行排序，如果内存不足需要使用外部排序。需要排序是因为不同的key会被match到相同的Reduce任务上。</li>
+<li>Reduce Worker会遍历排序后的Key，并将这个Key和它对应的中间值传给Reduce函数，Reduce函数的输出将被追加到所属分区的输出文件。</li>
+<li>当所有的Map&amp;Reduce任务完成后，Master唤醒用户程序，并将结果返回给用户程序。<br>通常在MapReduce任务结束之后，会产生R个文件（每个Reduce Worker产生一个输出文件），通常用户不需要合并这R个文件，而是将他们传给另一个MapReduce函数或者分布式应用对文件进行后处理。</li>
+</ol>
+<p>Fault Tolerance<br>Worker Failure</p>
+<ul>
+<li>Master会向Worker定期发送心跳，如果判定Worker Failure：<ul>
+<li>Complete Map Task or In-Progress Map Task 会被设置为IDLE状态， 并且重新执行。Complete Map Task也要重新执行，因为Worker Failure之后，其磁盘的数据是不可访问的。</li>
+<li>Complete Reduce Task不需要重新执行，因为Reduce的结果是直接写入Output File的，Output File存储在GFS上<br>Master Failure</li>
+</ul>
+</li>
+<li>Master会定期将metadata 进行checkpoint 保存到磁盘上，recover的时候加载最新的checkpoint恢复数据。</li>
+<li>Master如果Failure 会将任务Abort，由Client进行重试。<br>Semantics in the Presence of Failure</li>
+<li>Map 和 Reduce都是deterministic的函数（一致性），他们的输出理论上都是确定的，不论发生任何错误。<br>使用原子提交 (Atomic Commit) 来保证一致性：</li>
+<li>Map：每个Map任务执行完成后，生成R个临时文件，并将临时文件的地址封装为Message发送给Master，如果Master判断这个Message已经收到过，则直接忽略它。</li>
+<li>Reduce：Reduce的原子提交是依赖操作系统的重命名命令实现的 (mv in Linux), 一个Reduce任务执行完成后，会将临时文件重命名为输出文件名。如果同一个Task在多台Reduce Worker上执行，最终只有一个Worker的文件能够被保留。<br>空间局部性<br>在MapReduce提出的年代，网络带宽会成为系统的bottleneck。所以Master会考虑从GFS中寻找距离最近的Replica以减少网络的带宽使用。如果任务失败了，Master会优先在保存有Input File (Split) 数据拷贝的机器上执行Map任务。这样当执行大规模MapReduce任务的时候，大多数的Input data都是从本地读取的。(Worker 会缓存Data)，Master作为GFS的Client，不会缓存Data[1]。<br>备用任务<br>为了防止“木桶效应”，一个Worker的慢执行，导致整个MapReduce任务执行变慢，Master会在一个任务马上完成的时候，调度备用Worker来执行剩下的处于in-progress中的任务。不论是backup Worker还是初始Worker完成了任务，Master都会认可这个任务被完成。<br>应用场景</li>
+<li>分布式Grep</li>
+<li>统计URL访问频率</li>
+<li>构建倒排索引</li>
+<li>分布式排序：分布式MergeSort<br>Related System</li>
+<li>Distributed Storage：GFS</li>
+<li>Batch Processing: Spark</li>
+<li>Stream Processing: Flink</li>
+<li>High Availability: Chubby<br>总结<br>MapReduce的成功归因于以下三点：<br>模型使用起来非常简单，因为开放的API接口隐藏了内部的故障处理和并行机制；<br>大规模的应用场景能够使用MapReduce来处理，比如：机器学习，数据挖掘，搜索推荐；<br>谷歌的工程师们提供了一套完整的实现，使其能够应用于大规模的机器集群上。</li>
+</ul>
+<p>经验<br>编程模型的约束使得任务的并行和计算，故障容错变得更加容易，在MapReduce中用户只需要定义Map函数，Reduce函数和一些超参就能完成对任务的执行。<br>网络带宽是宝贵资源，（现在都光纤了，应该不存在这个问题了吧）。<br>冗余的处理能够一定程度上避免木桶效应。</p>
+<p>局限<br>历史局限，当时的背景下单机的性能远远不足，所以没有考虑使用内存进行更高效的计算。<br>没有将资源调度和计算调度分离。在后续的Hadoop生态中，MapReduce只关注与计算而资源调度由Yarn进行管理。</p>
+<p>Reference<br>[1] Google File System<br>[2] <a target="_blank" rel="noopener" href="https://research.google.com/archive/mapreduce-osdi04.pdf">https://research.google.com/archive/mapreduce-osdi04.pdf</a><br>[3]<br><a target="_blank" rel="noopener" href="https://tanxinyu.work/mapreduce-thesis/">https://tanxinyu.work/mapreduce-thesis/</a><br>[4] 正在实现的：<br><a target="_blank" rel="noopener" href="https://github.com/GaryGky/MIT-6.824/tree/lab1-mr/src/mr">https://github.com/GaryGky/MIT-6.824/tree/lab1-mr/src/mr</a></p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Google/">#Google</a>
+      
+        <a href="/tags/Distribtued-System/">#Distribtued System</a>
+      
+        <a href="/tags/Distributed-Computing/">#Distributed Computing</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>MapReduce</div>
+      <div>https://garygky.github.io/2022/05/22/MapReduce/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>May 22, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/05/31/spanner/" title="spanner">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">spanner</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/" title="Twitter 缓存应用分析">
+                        <span class="hidden-mobile">Twitter 缓存应用分析</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

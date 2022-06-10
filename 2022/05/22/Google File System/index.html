@@ -1,0 +1,789 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Google File System  分布式文件系统，弱一致性模型 (Relaxed Consistency)； 谷歌三驾马车之一，与MapReduce和BigTable开启了新的大数据时代，引领工业界向NoSQL发展；  推荐阅读：为了更好的体验，推荐移步至飞书文档。 GFS FAQ。 Intro单机系统的存储容量始终是有限的，随着数据量不断增大，如果只对单台机器进行scale up也会逐渐达">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GFS">
+<meta property="og:url" content="https://garygky.github.io/2022/05/22/Google%20File%20System/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="Google File System  分布式文件系统，弱一致性模型 (Relaxed Consistency)； 谷歌三驾马车之一，与MapReduce和BigTable开启了新的大数据时代，引领工业界向NoSQL发展；  推荐阅读：为了更好的体验，推荐移步至飞书文档。 GFS FAQ。 Intro单机系统的存储容量始终是有限的，随着数据量不断增大，如果只对单台机器进行scale up也会逐渐达">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/GFS.png">
+<meta property="article:published_time" content="2022-05-22T04:18:25.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.463Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Distributed Storage">
+<meta property="article:tag" content="File System">
+<meta property="article:tag" content="Google">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/GFS.png">
+  
+  
+  
+  <title>GFS - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/sunset.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="GFS"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-05-22 12:18" pubdate>
+          May 22, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.1k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          60 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">GFS</h1>
+            
+            <div class="markdown-body">
+              
+              <p>Google File System</p>
+<ul>
+<li>分布式文件系统，弱一致性模型 (Relaxed Consistency)；</li>
+<li>谷歌三驾马车之一，与MapReduce和BigTable开启了新的大数据时代，引领工业界向NoSQL发展；</li>
+</ul>
+<p>推荐阅读：为了更好的体验，推荐移步至<a target="_blank" rel="noopener" href="https://lo845xqmx7.feishu.cn/docs/doccncmo8iqkFFn424B8lZd44gh">飞书文档</a>。 <a target="_blank" rel="noopener" href="https://lo845xqmx7.feishu.cn/docs/doccnadQrN9vNCbIGJh5YtTOGxh">GFS FAQ</a>。</p>
+<p>Intro<br>单机系统的存储容量始终是有限的，随着数据量不断增大，如果只对单台机器进行scale up也会逐渐达到上限，所以scale out to multi-Server是发展的必然。<br>GFS主要支持谷歌内部的软件系统，比如：YouTube视频，Google Drive等等，谷歌并不对外开放GFS的接口，只对外提供上层服务。Bigtable 和 MapReduce 都是建立在GFS之上的应用。并且Hadoop生态中的HDFS也是在GFS系统之上发展出来的一个文件系统分支。</p>
+<p>系统的主要目标和大多数分布式存储系统一致，主要包含三个方面：</p>
+<ul>
+<li>Reliable, High Performaces</li>
+<li>Scalable</li>
+<li>Available<br>系统设计时考虑的几个方面：</li>
+<li>Normal Failure<br>文件系统由上百台廉价的存储机器组成，对外部大量的Client 提供服务。</li>
+<li>Huge File<br>系统需要存储TB级别的数据集，由十亿级别的KB的数据组成，所以需要重新对磁盘IO和文件块大小进行评估。</li>
+<li>Append rather than Overwriting<br>在GFS中几乎不存在随机写，并且一旦写入了文件，所有的读操作都是顺序读，系统的优化主要集中在这个点上。<br>Assumption<br>谷歌的工程师针对自家的业务场景对系统的情况规定了一些前提与假设：</li>
+<li>系统中每一台Sever都是廉价的主机，所以经常会fail，需要对系统进行监控和容错。</li>
+<li>GFS主要用于存储大文件，相比Chubby 主要是用来存储小文件的场景，GFS存储的文件量通常为几百万的100MB的文件甚至Multi-GB 的文件大小。</li>
+<li>读场景主要有两种方式：<ul>
+<li>大规模的顺序读写：顺序读写上百个KB大小的内容。</li>
+<li>小规模的随机读写：几KB的在随机位置的读写。</li>
+</ul>
+</li>
+<li>写场景主要是 大 和 顺序写，以Append的方式追加到文件末尾，并且GFS规定一旦文件写入就极少会被修改。</li>
+<li>系统需要执行原子的高并发写入。</li>
+<li>高持续带宽比低延迟更重要。<br>作为一个分布式文件系统，GFS在乎的是整个系统的吞吐量，由此可能会因为Replication 造成一些延迟的开销。</li>
+</ul>
+<p>Interface<br>不完全支持标准POSIX API接口，但提供了<code>create, delete, open, close, read, write</code>这些方法。<br>POSIX，Portable Operating System Inferface，可移植操作消停接口，是UNIX系统设计的一个标准。Linux和Windows部分支持该协议。</p>
+<ul>
+<li>Snapshot：可以对file 或者 目录打快照</li>
+<li>Record Append：允许多个Client 同时向同一个文件追加记录，并且不用加锁。<br>Architecture<br>重点来了：GFS集群是一个经典的Master-Worker架构，Master充当任务分配和元数据管理的角色，而Worker是真正存储数据的角色。<br>整个系统的架构如下图所示。</li>
+</ul>
+<p>角色</p>
+<ul>
+<li>Chunk<br>数据块，每一个chunk的大小为64MB并且每一个chunk由一个uint64类型的 chunk handler 唯一标识，在创建的时候由master指定。为了保证容错，通常一个chunk会包含三个副本。<br>目前这种设计会造成hot spot，极端情况下，所有的Client都去访问某一个chunk，然而该chunk只有三个副本，会导致chunk所在的机器 IO次数急剧增大。<br>GFS的解决方案是给这些chunk更多的Replica，Author们也提到了可以让Client 向另一个 Client 请求数据。</li>
+</ul>
+<p>可以看到在GFS文件系统中使用了比Linux操作系统中更大的块，能够带来如下优点：</p>
+<ul>
+<li><p>减少Client 和 Master的交互次数<br>  一次请求就能获取所有chunk的位置信息，并且这个信息是可以在TTL规定的时间内缓存的 。</p>
+</li>
+<li><p>减少Client 和 ChunkServer的交互次数<br>  利用空间局部性和TCP的长链接，减少网络IO。</p>
+</li>
+<li><p>减少了元数据的大小<br>  如果chunk size设置的比较小，那么在master上就需要管理更多的元数据信息。一旦RAM装不下，就会使用Disk存储，这样磁盘IO又成为了性能瓶颈。<br>每一个文件会被split成不同的chunk，这些chunk可以存放在一台机器的磁盘上，也可以存放在不同机器的磁盘上。在GFS的视角看来，我需要存储和管理的文件就是chunk而不会关心file到底有多大；而从用户的视角来看，每一个file被切分出来的chunk1-n都是逻辑连续的。</p>
+</li>
+<li><p>Client<br>GFS Client 可以认为是依赖于 GFS lib 进行类库函数调用的线程，也是一个逻辑上的概念 [2]。<br>Client Side 不会缓存文件数据，因为数据太大了。</p>
+</li>
+<li><p>Master<br>提供In-Memory的元数据管理支持，主要包含：<br>无法复制加载中的内容<br>表示Master会通过operation log持久化到Disk上。对于chunks的位置信息，通过Heartbeats 周期性获取。<br>Master 在内存中存储了两个表：<br>Table 1:<br>Key<br>Value<br>Filename<br>An array of chunk handler (nv)</p>
+</li>
+</ul>
+<p>Table 2:<br>Key<br>Value<br>Chunk handler<br>List of chunk servers<br>Chunk version number<br>Primary node<br>Lease expiration</p>
+<ul>
+<li>Chunk Server</li>
+</ul>
+<p>Consistency Model<br>Guarantees by GFS<br>文件名namespace的变化（文件创建）是由master在内存中进行的，整个操作通过namespace lock确保操作的原子性，master的operate log定义了全局创建操作的顺序。</p>
+<p>这张表描述了在Append Record之后系统的状态：</p>
+<ul>
+<li>Consistent: 不论Client从哪一个Replica中读取数据，Client都能看到一致的信息。</li>
+<li>Defined：当一个文件数据修改后，它能够保持Consistenct的状态并且所有Client能够看到全部修改的内容。是一种级别更高的一致性。</li>
+<li>Consistent bu undefined: Client虽然能够看到相同的数据，但是不能及时看到其他进程的修改。</li>
+<li>Inconsistent：不同Client能够在不同的时间看到不同的数据。<br>此外，表格中也显示了GFS中两种更新操作：</li>
+<li>Write<br>Write是修改原来文件中的数据，相当于是一种overwrite的操作。</li>
+<li>Record Append<br>Record Append是一种追加操作，它包含着“原子 + AtLeastOnce” 语义，因为没有AtMostOnce的语义，所以GFS是有可能存在Duplicate Record的。GFS为了保证写入的顺序，通常会由Primary Replica决定一个Chunk的写入顺序，并且由Master向Client返回一个Offset代表Record写入的起始位置。<br>Master 会通过心跳的方式与Chunk Server进行定期的通信，并且使用Version Number来判断Replica是否过期；一旦Master判定某个Replica是过期的，会对过期的Replica 进行GC。</li>
+</ul>
+<p>Client会对GFS的数据进行缓存，并且Client有可能缓存到旧数据，由于GFS中的数据都是以Append ONLY的方式写入的，所以Client 缓存的数据可以理解为只是部分不完整的数据，而不是错误的数据。<br>System InterActions<br>Read Process<br>Client 向Master请求文件所在的Replica，Master返回Chunk Handler和Location；<br>Client向最近的Replica发起请求，读取指定范围的数据。</p>
+<p>Write Process<br>Lease &amp; Mutation Order：Master会给每一个Mutation的操作（每一个Mutation操作只对应一个Chunk，即不能超过chunksize）指定一个Primary Replica，给它赋予一个Lease，并且由这个Primary决定每chunk的写入顺序。<br>在Lease的时效 (60s) 内Primary可以不用与Master通信，而自行决定文件Append的执行顺序。<br>Master通过心跳的方式判断Primary的liveness，并且决定是否需要延长Lease的时效。</p>
+<p>整个写操作可以分为如下7个步骤：</p>
+<ol>
+<li>Client向Master询问哪一个Chunk Server持有要进行写操作的Chunk的Lease</li>
+<li>Master向Client返回Primary的Handler以及其他Replica节点的地址；Client收到Master的回复并进行缓存，当Primary不可达或者TTL后，会向Master按照Step1重新请求。</li>
+<li>Client向所有的Replica推送数据，并且Replica会将数据写入到Buffer中。</li>
+<li>当Replica都接收到了Client的数据，Client会向Primary发起Commit请求，Primary对多个写生成执行计划（主要是决定写入顺序），然后将该执行计划先应用于本地IO操作。</li>
+<li>Primary将写操作转发给其他两个Replica，使其按照Primary的执行计划进行IO操作。</li>
+<li>Follower给Primary 返回写入成功或者失败的Response。</li>
+<li>Primary响应Client，并且返回该过程中发送的错误，Client如果收到了error，则会Reissue这次Write操作。（📢 这里会引起问题…）。<br>SnapShot<br>这个操作由于比较常见，所以在内容中增加一下。Redis持久化和一些新型的数据库引擎 (In Memory: BitCask; Disk: InnoDB-MVCC) 都使用了SnapShot来提升并发度保证一致性。<br>目标：尽量减少对正在进行写操作的影响。<br>GFS使用标准的Copy-On-Write技术来实现快照：</li>
+</ol>
+<ul>
+<li>当Master收到SnapShot的请求后，首先会revoke所有Primary Replica的Lease，保证后续的Write操作都会经过Master。</li>
+<li>当Lease撤回或者过期后，Master首先会将操作日志记录到磁盘，然后通过复制源文件以及目录树的metadata来将日志记录应用到内存中的状态。</li>
+<li>当Client请求进行Write操作的时候，Master发现chunk上的引用技术大于1，便会重新命令chunk Server 创建一个新的chunk，在新的chunk上进行写操作。<br>Master’s Operation<br>Master主节点负责的工作有：</li>
+<li>所有namespace的管理工作</li>
+<li>管理整个系统中所有的chunk Replicas<ul>
+<li>做出将chunk 实际存储在哪里的决定，创建新的Chunk和 Replica；</li>
+<li>协调系统的各种操作（比如：读、写、快照），用于保证chunk正确且有效的进行备份。</li>
+<li>管理chunkserver之间的负载均衡，回收没有被利用的存储空间。<br>Namespace Management and locking<br>不同于其他传统的文件系统，GFS并没有为每一个目录创建一个用于记录当前目录拥有哪些文件的数据结构，也不支持文件和目录的别名。GFS逻辑上把namespace当做一个查询表，用于将full pathname（目录或者是具体的文件）映射为metadata，并且使用前缀压缩使得这个表可以在内存中被高效的表示。<br>Master节点的每一个操作都必须先获得一系列的锁才能够真正的运行，当Client并发的对 <code>/home/user/bar</code> 和<code>/home/user/foo</code>进行修改的时候，会对bar和foo两个文件上写锁并对父节点上读锁。</li>
+</ul>
+</li>
+</ul>
+<p>一般来说，最底层的文件修改都需要上写锁，为了防止对文件进行并发的修改，而对于其父目录通常只需要上读锁，为了防止将目录重命名、删除和SnapShot。<br>并且所有的锁获取都需要按照顺序获取，以此来防止死锁。</p>
+<p>Replicas Create &amp; Rebalance<br>Replicas 会在 Create, Re-replication, Rebalance的时候被创建。<br>创建<br>当Master需要创建Replicas的时候, Master会按照以下策略选择将 Replicas 放置到哪个位置上：</p>
+<ul>
+<li>Master希望选择一个磁盘使用率低于平均值的Server。</li>
+<li>Master不希望所有最新创建的Replicas都集中在一台机器上，因为刚创建的Replicas可能隐含着即将进行大量的读写操作。</li>
+<li>Master希望尽可能地把Replicas放到同一个DC中，不同的 racks，即不同的层上。<br>Re-Replication</li>
+<li>某些Replicas不可用导致Replicas的数量低于预先设置的数量</li>
+<li>程序员手动增加了Replicas的数量<br>Master会按照一定的优先级进行Re-Replicatoin：</li>
+<li>首先，如果ChunkA的Replicas数量少于chunksB 那么优先对chunkA进行Re-Replication；</li>
+<li>如果某个 chunk阻塞了Client请求的执行，那么优先对其进行Re-Replication；</li>
+<li>最近活动 (Read &#x2F; Write) 的文件比最近删除的文件具有更高的优先级。<br>为了防止过多的clone操作占用系统的带宽，Master节点既会限制chunkserver的clone数量也会限制整个GFS集群同时进行clone的数量。<br>Rebalancing<br>Master会检查Replicas的分布，然后将Replicas移动到更合适的位置。通过这个机制，Master可以逐渐对新加入的Node进行Replicas填充，而不是瞬间加入大量的Replicas将其打爆。总的来说，重平衡是为了使磁盘利用率和Server QPS更加均匀的分布到各台机器上。<br>Garbage Collection<br>GFS使用了一种惰性删除的操作，当一个文件被应用删除时，Master节点会将此删除操作立即写入日志系统，但是Master不会立即将文件空间回收，而是将其文件名设置为一个不可见的name，并且包含删除指令的时间戳。<br>在Master定期对namespace扫描的过程中，如果发现一个chunk的删除时间已经超过三天，会将这个chunk的空间进行回收。在一些特殊的情况下，可能会出现orphaned chunks，chunkserver如果检测到orphaned chunk会立即将他删除。</li>
+</ul>
+<p>优点：这种删除方式简单可靠</p>
+<ul>
+<li><p>chunk可能在一些replicas上成功，在一些Replica上失败，因此会留下一些节点没有记录的chunk数据。当master发现其没有记录某个chunk信息的时候，会告知chunkserver，chunkserver会对那个空位置进行垃圾回收。</p>
+</li>
+<li><p>删除指令不一定能够送达chunkserver，在GFS的方案中，因为会有定时的心跳，因此master 最终一定会告知chunkserver删除相关的chunk。<br>缺点<br>这种方式在资源紧张情况下，无法及时回收存储空间。不过GFS提供了其他机制来确保快速的删除操作，比如动态地加快存储回收策略，在GFS不同区域采用不同的删除策略。<br>High Availability<br>Fast Recovery<br>Master 以及 Chunk Server不管出于何种原因的故障，都能在秒级时间恢复故障前的状态。<br>Chunk Replication<br>一个chunk复制到三台Replica上。<br>Master Replication<br>Shadow Master：在Master节点宕机后，Shadow Master能够对外提供只读的操作。Shadow Master与Master的通信类似MySQL PB 的Binlog操作。<br>Shadow Master允许略微滞后于Master，但是不会读到错误的旧数据，而是读到不完整的旧数据，Append Only保证的。</p>
+</li>
+</ul>
+<p>Some Questions For MySelf &amp; Reader:</p>
+<ul>
+<li>GFS prohibits the size of a record append to exceed the chunk size. Use a sequence of events to demonstrate why a larger record append may lead to correctness issues.</li>
+<li>When GFS can show some duplication?</li>
+<li>Why can Client-B read Client-A’s update even though Client-A is returned an error?</li>
+</ul>
+<p>GFS FAQ<br>GFS Supplementary </p>
+<p>Reference<br>[1] <a target="_blank" rel="noopener" href="https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/gfs-sosp2003.pdf">https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/gfs-sosp2003.pdf</a><br>[2]<br><a target="_blank" rel="noopener" href="https://spongecaptain.cool/post/paper/googlefilesystem/">https://spongecaptain.cool/post/paper/googlefilesystem/</a><br>[3] <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Google_File_System">https://en.wikipedia.org/wiki/Google_File_System</a><br>[4] MIT 6.824<br>无法复制加载中的内容<br>[5] Google Slides</p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+      
+        <a href="/tags/File-System/">#File System</a>
+      
+        <a href="/tags/Google/">#Google</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>GFS</div>
+      <div>https://garygky.github.io/2022/05/22/Google File System/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>May 22, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/05/22/Dynamo/" title="Dynamo">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Dynamo</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

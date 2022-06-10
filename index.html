@@ -1,0 +1,854 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Distributed System Learning">
+<meta property="og:type" content="website">
+<meta property="og:title" content="甘凯元的博客">
+<meta property="og:url" content="https://garygky.github.io/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="Distributed System Learning">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 100vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/backgroud.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Welcome to Kaiyuan&#39;s Blog"></span>
+          
+        </div>
+
+        
+      </div>
+
+      
+        <div class="scroll-down-bar">
+          <i class="iconfont icon-arrowdown"></i>
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div id="board"
+          style="margin-top: 0">
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/06/10/DistributedLock/" target="_self">
+          <img src="/img/cover/redis-go.webp" srcset="/img/loading.gif" lazyload alt="Distributed Lock">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/06/10/DistributedLock/" target="_self">
+          Distributed Lock
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/06/10/DistributedLock/" target="_self">
+        <div>
+          
+          IntroductionScenario Distributed locks are a very useful primitive in many environments where different processes must operate with shared resources in a mutually exclusive way.  Developers want to en
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-06-10 10:35" pubdate>
+              2022-06-10
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-System/">#Distributed System</a>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/NoSQL/">#NoSQL</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/06/06/SegmentQuery/" target="_self">
+          <img src="/img/bg/seashore.jpeg" srcset="/img/loading.gif" lazyload alt="SegmentQuery">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/06/06/SegmentQuery/" target="_self">
+          SegmentQuery
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/06/06/SegmentQuery/" target="_self">
+        <div>
+          
+          区间问题QuickView读者可以自行思考一个问题：对于一个数组 a，如果我想对 a 的进行以下三种操作，在不使用本文数据结构的情况下，暴力算法的时间复杂度为多少：  单点修改，区间查询：将第x个元素加k，求出 [x, y] 的区间和。  区间修改，单点查询：将 [x, y] 区域内的元素加k，并且求出第$ i (x &lt;&#x3D; i &lt;&#x3D; y) $个元素的值。  区间修改
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-06-06 12:02" pubdate>
+              2022-06-06
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Algorithm/">#Algorithm</a>
+            
+              <a href="/tags/High-Advanced-DS/">#High Advanced DS</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/06/03/OnceInterviewPreparation/" target="_self">
+          <img src="/img/cover/segment_query.png" srcset="/img/loading.gif" lazyload alt="记一次面试算法题准备过程">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/06/03/OnceInterviewPreparation/" target="_self">
+          记一次面试算法题准备过程
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/06/03/OnceInterviewPreparation/" target="_self">
+        <div>
+          
+          我面试之前是如何准备算法题的先说说笔者自身的情况：  北航本 &#x2F; 新加坡Top2 硕 本科（毕业后）的时候先后在腾讯和字节跳动实习 + 转正工作，经历过大大小小的面试总计大概10来场吧，选择性的粘贴一下之前的面经，可以感觉到不同的公司有不同的面试风格: 阿里支付宝：比较偏重于Java世界，对于New Grad来说八股文的考察比较多，但很基础，电话面试。  蚂蚁面经   腾讯CSIG：比较
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-06-03 12:08" pubdate>
+              2022-06-03
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Leetcode/">#Leetcode</a>
+            
+              <a href="/tags/Interview/">#Interview</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/31/spanner/" target="_self">
+          <img src="/img/cover/spanner.png" srcset="/img/loading.gif" lazyload alt="spanner">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/31/spanner/" target="_self">
+          spanner
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/31/spanner/" target="_self">
+        <div>
+          
+          Spanner: Google’s Globally-Distributed Database前言：个人感觉这篇paper组织的逻辑比 Dynamo和GFS 难理解一些，因为时而讲存储引擎层的内容，时而讲存储Service层的内容。笔者按照自己的逻辑重新组织了一下文章，希望能够帮助读者更好的理解Spanner。 推荐阅读：为了更好的体验，请移步至飞书 Spanner. 特征  可扩展的 基于多版本
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-31 21:25" pubdate>
+              2022-05-31
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/NoSQL/">#NoSQL</a>
+            
+              <a href="/tags/Google/">#Google</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/MapReduce/" target="_self">
+          <img src="/img/cover/mapreduce.jpeg" srcset="/img/loading.gif" lazyload alt="MapReduce">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/MapReduce/" target="_self">
+          MapReduce
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/MapReduce/" target="_self">
+        <div>
+          
+          MapReduceAbstract: A high-level idea of Map-Reduce  Map用户使用Map函数计算出一系列的中间 K-V pairs ReduceReduce 函数在对所有的中间K-V Pairs进行聚合（Merge）操作假设给我十个数组，让我找出每个数组的第五个元素，那么Map函数的作用就是找到每一个数组的第五个元素，Reduce函数就是将每个数组的第五个元素进
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 13:04" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Google/">#Google</a>
+            
+              <a href="/tags/Distribtued-System/">#Distribtued System</a>
+            
+              <a href="/tags/Distributed-Computing/">#Distributed Computing</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/" target="_self">
+          <img src="/img/cover/twitter.png" srcset="/img/loading.gif" lazyload alt="Twitter 缓存应用分析">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/" target="_self">
+          Twitter 缓存应用分析
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/" target="_self">
+        <div>
+          
+          Twitter 缓存应用分析 为了更好的阅读体验，请移步至 飞书文档 Abstract  TTL 缓存过期时间的设置十分重要。  FIFO 在workload非常大的时候工作得更好（至少和LRU性能差不多，但是理解起来会容易很多）。1 IntroductionIn Memory-Cache:   Redis  MemCache将研究者的注意力吸引到：缓存命中率，吞吐量和减小延迟。目前的评估方法是存
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 13:03" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/Twitter/">#Twitter</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/VM-FT/" target="_self">
+          <img src="/img/cover/vmft.jpeg" srcset="/img/loading.gif" lazyload alt="VM-FT">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/VM-FT/" target="_self">
+          VM-FT
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/VM-FT/" target="_self">
+        <div>
+          
+          VM-FT本文是由VMWare于2010 年提出的一个虚拟机容错解决方案，使用的是一个Primary-BackUp的架构。 推荐阅读：为了更好的阅读体验，请移步至飞书 VM-FT 前言在听取了MIT6.824的课程以及阅读了VM-FT的paper之后，笔者个人感觉要让VM级别的应用实现Fault Tolerance的难度会比DB (In-Memory &#x2F; Disk) 级别的应用大不少，主
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 13:02" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-System/">#Distributed System</a>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/Partition/" target="_self">
+          <img src="/img/cover/partition.jpeg" srcset="/img/loading.gif" lazyload alt="Partition">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/Partition/" target="_self">
+          Partition
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/Partition/" target="_self">
+        <div>
+          
+          Partition的目标是用来提升读写的请求吞吐的，每一个Partition保留的整个数据集的一部分，针对不同数据的请求会被路由到不同的Partition中  MongoDB，ES，SolrCloud中的Shard HBase中的 Region BigTable中的 Tablet Cassandra和Riak中的 VNode Couchbase中的 vBucket1 Partition &amp;
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 13:01" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/DDIA/">#DDIA</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/Transaction/" target="_self">
+          <img src="/img/cover/transaction.png" srcset="/img/loading.gif" lazyload alt="Transaction">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/Transaction/" target="_self">
+          Transaction
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/Transaction/" target="_self">
+        <div>
+          
+          Transaction几乎所有的关系型数据库和部分NoSQL能够提供事务支持，早在1975年IBM提出的第一个SQL系统System-R中，介绍了事务的概念。虽然在过去的40年中，事务的实现方式改变了许多，但是其基本的思想与40年前的System-R几乎是一致的 ，在MySQL，PostgreSQL, Oracle, SQL Server中 事务的实现原理几乎是与System-R相同的。 推荐阅读
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 13:01" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/DDIA/">#DDIA</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2022/05/22/Dynamo/" target="_self">
+          <img src="/img/cover/Dynamo.png" srcset="/img/loading.gif" lazyload alt="Dynamo">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/22/Dynamo/" target="_self">
+          Dynamo
+        </a>
+      </h1>
+
+      <a class="index-excerpt" href="/2022/05/22/Dynamo/" target="_self">
+        <div>
+          
+          Dynamo: Amazon’s High Available KV Store DynamoDB是Amazon平台上构建的 “always on” availability 级别的NoSQL数据库，并且能做到无缝扩展 (high-scalability)。为了实现这个级别的可用性，它在某些故障场景中将不可避免的牺牲一致性。最重要的两个核心点：High-Availability &amp; Sca
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-22 12:40" pubdate>
+              2022-05-22
+            </time>
+          </div>
+        
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+            
+              <a href="/tags/NoSQL/">#NoSQL</a>
+            
+              <a href="/tags/Amazon/">#Amazon</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+
+
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        jQuery.ajax({
+          type: 'GET',
+          url: 'https://github.com/Garygky',
+          headers: {},
+          dataType: 'json',
+          success: function(result) {
+            var apiText;
+            if (result) {
+              var keys = 'hitokoto'.split(',');
+              if (result instanceof Array) {
+                result = result[0];
+              }
+              for (const k of keys) {
+                var value = result[k];
+                if (typeof value === 'string') {
+                  apiText = value;
+                  break;
+                } else if (value instanceof Object) {
+                  result = value;
+                }
+              }
+            }
+            apiText ? typing(apiText) : typing(text);
+          },
+          error: function(xhr, status, error) {
+            if (error) {
+              console.error('Failed to request https://github.com/Garygky:', error);
+            }
+            typing(text);
+          }
+        })
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

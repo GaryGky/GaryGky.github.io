@@ -1,0 +1,724 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Twitter 缓存应用分析 为了更好的阅读体验，请移步至 飞书文档 Abstract  TTL 缓存过期时间的设置十分重要。  FIFO 在workload非常大的时候工作得更好（至少和LRU性能差不多，但是理解起来会容易很多）。1 IntroductionIn Memory-Cache:   Redis  MemCache将研究者的注意力吸引到：缓存命中率，吞吐量和减小延迟。目前的评估方法是存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Twitter 缓存应用分析">
+<meta property="og:url" content="https://garygky.github.io/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="Twitter 缓存应用分析 为了更好的阅读体验，请移步至 飞书文档 Abstract  TTL 缓存过期时间的设置十分重要。  FIFO 在workload非常大的时候工作得更好（至少和LRU性能差不多，但是理解起来会容易很多）。1 IntroductionIn Memory-Cache:   Redis  MemCache将研究者的注意力吸引到：缓存命中率，吞吐量和减小延迟。目前的评估方法是存">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/twitter.png">
+<meta property="article:published_time" content="2022-05-22T05:03:57.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.466Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Distributed Storage">
+<meta property="article:tag" content="Twitter">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/twitter.png">
+  
+  
+  
+  <title>Twitter 缓存应用分析 - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/seashore.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Twitter 缓存应用分析"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-05-22 13:03" pubdate>
+          May 22, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.2k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          27 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Twitter 缓存应用分析</h1>
+            
+            <div class="markdown-body">
+              
+              <p>Twitter 缓存应用分析</p>
+<p>为了更好的阅读体验，请移步至 <a target="_blank" rel="noopener" href="https://lo845xqmx7.feishu.cn/docs/doccn329gaovix2csddT3FXFzvb">飞书文档</a></p>
+<p>Abstract</p>
+<ul>
+<li><p>TTL 缓存过期时间的设置十分重要。</p>
+</li>
+<li><p>FIFO 在workload非常大的时候工作得更好（至少和LRU性能差不多，但是理解起来会容易很多）。<br>1 Introduction<br>In Memory-Cache: </p>
+</li>
+<li><p>Redis</p>
+</li>
+<li><p>MemCache<br>将研究者的注意力吸引到：缓存命中率，吞吐量和减小延迟。目前的评估方法是存在缺陷的，大多数是基于：Storage Caching Trace，KV Database Benchmark。但是现在的评估方法都没有将Object Size考虑进去，然而Object Size是影响缓存命中率和吞吐量的重要因子。<br>本文基于100个Twitter缓存集群的模拟和分析，提出了以下几个重要观点：</p>
+</li>
+<li><p>In-memory 缓存并不总是服务于Read-Heavy的场景，有很多缓存也是服务于Write-Heavy的场景的。</p>
+</li>
+<li><p>TTL 会影响工作集的大小所以必须将TTL考虑到缓存的设置中，有效的清除缓存应该优先与缓存淘汰策略。</p>
+</li>
+<li><p>Slab-Based 的缓存比如：Memcache，会受到对象大小分布不均的影响；并且瞬时增大，或者周期性变化的workload，也会对缓存造成影响。</p>
+</li>
+<li><p>根据Zipfian（奇夫定律），访问量最大的key通常是访问量第二大的key的两倍，这在写吞吐较大的系统中会出现明显的倾斜。</p>
+</li>
+<li><p>在合理的缓存空间中，FIFO和LRU在数据量很大的情况下性能差异不明显，LRU在小数据集中的性能更好。<br>2 Twitter 体系中使用的In-Memory 缓存<br>2.1 服务架构和缓存<br>2011 年， Twitter开始了向微服务和容器化迁移的进程，其中缓存作为一项重要的基础架构，随着DRAM的容量扩大，也随之发展。<br>在Twitter中，主要有两种常用的业务缓存组件：Twemcache 和 Nightawk，前者是基于Memcache构建的缓存，具备低延迟、高吞吐的特点；后者是基于Redis构建的缓存，具有更丰富的数据结构，主备提供了高可用的服务。<br>2.2 Twemcache Overview<br>Twemcache fork了Memcache早期的版本，加入了Twitter自身的一些改进。</p>
+</li>
+<li><p>Slab-Based 内存管理<br>传统对于缓存对象的分配策略是使用 <code>heap memory allocators</code>，比如：ptmalloc，jemalloc；这些分配策略会产生“无限大”的外部碎片，而Twitter缓存对象的大小从 若干字节到 10s KB不等，传统分配策略不适用与在小容量容器中使用。<br>基于Slab的分配方式如上图所示，内存会被分为若干等级的Slab，每一个Slab内部又会将内存划分为大小相同的item；Slab的等级越高，表示每一个对象占用的内存越多，每一个缓存对象会被分配到大小最合适的Slab中。Slab-Based 内存分配策略防止了外部碎片，将内存碎片局限在一个item当中。</p>
+</li>
+<li><p>Slab-Based 淘汰策略<br>当Twemcache接收到一个新的缓存对象obj时，首先会查找对应的slab-class是否存在合适大小的块，如果存在的话会直接分配给obj，否则会创建一个更大的slab-class。当内存不足时，需要淘汰掉一些内存中的内容。<br>Memcache 的淘汰策略基本都是基于<code>item</code>这个粒度去做的，通常使用LRU算法对内存中的缓存对象进行淘汰。这么做在 Key Size稳定的情况下没有问题，但是如果 Key Size 随着使用不断增大，后来的大对象将没有位置存储，这种情形被称为：Slab-Calcification.<br>为了解决上述问题，Twemcache使用了一种基于Slab的内存淘汰策略，包括 Slab-Random, Slab-LRU, Slab-LRC。<br>2.3 Cache 使用场景<br>Twitter使用缓存的场景可以概括为三类：存储、计算和短暂的数据。</p>
+</li>
+</ul>
+<p>2.3.1 Cache for Storage<br>最常见最常用的场景，因为后台的数据库延迟高、带宽小。<br>该领域一些重要的研究内容包括：提升缓存命中率，重新设计一个更密集的存储设备来适应更大的工作集，增强负载均衡，增加写吞吐。<br>如上图所示，该缓存集群在整个业务缓存中使用的比例虽然只有30%，但是涵盖了大多数的请求，占用了大多数的内存。<br>2.3.2 Cache for Computation<br>实时流计算使用较多<br>包括一些深度学习框架中也十分常见（PyTorch &#x2F; TensorFlow）<br>跟机器学习系统相关的场景接触的可能会比较多，该场景主要是缓存一些模型计算的中间变量，包括：特征(Feature), 和预测结果(Prediction)。<br>2.3.3 Cache for Transient Data<br>用来存储一些瞬态的数据，不落库的数据。<br>在该场景下可能会有一些数据丢失，但是Twitter的开发人员在这种高速访问和data loss做过trade-off，保留了该场景的使用。<br>一些典型的例子：</p>
+<ul>
+<li>Rate Limiter: 用来记录某个用户访问请求的次数，通常用于防止DoS攻击；<code>(UserID, Cap)</code></li>
+<li>Deduplication Cache：用于去重。<code>(Key, Cap=1)</code><br>3 评估方法<br>收集分析日志<br>Twemcache 每一个集群都有一个<code>built-in</code> 的非阻塞日志系统：klog. klog的默认设置是每一百条请求生成一个日志，为了保证分析的覆盖性：研究者手动将采样率调整为100%，每一个集群中采样两个缓存实例进行分析。<br>作者从153个Cluster中的306个实例收集了 80TB的日志数据，每一个Cluster的QPS为1000。为了方便分析，作者筛选了54个流量最高的集群，他们处理了90%的QPS以及76%的内存。<br>3.1 缓存命中率 or Miss Ratio</li>
+</ul>
+<p>Miss Ratio<br>图a 展示了10个缓存缺失率最高的缓存服务，8 &#x2F; 10的缓存缺失率在5%以下，6 &#x2F; 10的缓存缺失率在1%以下。唯一的例外是最上面的点，它的缓存缺失率高达70%，它是一个write-heavy的缓存，相比其他的CDN缓存，明显缺失率要高很多。<br>Miss Ratio Stability<br>除了缓存缺失率，缓存缺失率的稳定性也十分重要，因为对于一个后端系统来说，往往是最高的缓存缺失率决定了系统需要提供的QPS能力，缓存缺失率稳定性定义为：$$\frac{mr_{max}}{mr_{min}}$$。很多时候一个稳定性更高的缓存服务比一个不稳定的缓存更受青睐。从图b可以看到，缓存不稳定性越高的服务，它的缓存命中率更低，说明后端系统对于Corner case的考虑不足，导致系统偶尔会出现一些spike。<br>3.2 请求率和Hot-Keys</p>
+<ul>
+<li><p>蓝线：请求量；</p>
+</li>
+<li><p>红线：访问的object数量；<br>大多数时候对于spike的理解是hotkey导致的，但是系统并不总是这种情况，因为从右图可以看到在request出现spike的时候，object 访问量也会上升，说明不是因为热key引起。某些可能的原因是：客户端重试，网络拥塞，scan-like请求，周期性任务。<br>3.3 Operation on Cache<br>Write Heavy Cache：写操作超过30% 的workloads。</p>
+</li>
+<li><p>从图b可以看出，超过35%的缓存集群都是write-heavy的，并且有超过20% 的缓存集群的写操作超过50%。<br>一些write-heavy的场景：</p>
+</li>
+<li><p>频繁更新的数据：机器学习的场景，用缓存保存一些不需要持久化的数据，所有的计算和更新都是在缓存上操作的。</p>
+</li>
+<li><p>预加载的数据：记录用户行为的场景，很多服务都是懒加载的，但在用户行为分析的场景中，根据局部性原理，可能会将用户的信息一次性加载到缓存中。但这些数据又不是可复用的（一个用户看完之后就应该要删除了），所以这些预加载的数据会被频繁更新。</p>
+</li>
+</ul>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Distributed-Storage/">#Distributed Storage</a>
+      
+        <a href="/tags/Twitter/">#Twitter</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Twitter 缓存应用分析</div>
+      <div>https://garygky.github.io/2022/05/22/Twitter-缓存应用分析/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>May 22, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/05/22/MapReduce/" title="MapReduce">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">MapReduce</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/05/22/VM-FT/" title="VM-FT">
+                        <span class="hidden-mobile">VM-FT</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

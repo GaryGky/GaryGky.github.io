@@ -1,0 +1,818 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="区间问题QuickView读者可以自行思考一个问题：对于一个数组 a，如果我想对 a 的进行以下三种操作，在不使用本文数据结构的情况下，暴力算法的时间复杂度为多少：  单点修改，区间查询：将第x个元素加k，求出 [x, y] 的区间和。  区间修改，单点查询：将 [x, y] 区域内的元素加k，并且求出第$ i (x &lt;&#x3D; i &lt;&#x3D; y) $个元素的值。  区间修改">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SegmentQuery">
+<meta property="og:url" content="https://garygky.github.io/2022/06/06/SegmentQuery/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="区间问题QuickView读者可以自行思考一个问题：对于一个数组 a，如果我想对 a 的进行以下三种操作，在不使用本文数据结构的情况下，暴力算法的时间复杂度为多少：  单点修改，区间查询：将第x个元素加k，求出 [x, y] 的区间和。  区间修改，单点查询：将 [x, y] 区域内的元素加k，并且求出第$ i (x &lt;&#x3D; i &lt;&#x3D; y) $个元素的值。  区间修改">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/bg/seashore.jpeg">
+<meta property="article:published_time" content="2022-06-06T04:02:19.000Z">
+<meta property="article:modified_time" content="2022-06-10T04:05:01.465Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Algorithm">
+<meta property="article:tag" content="High Advanced DS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/bg/seashore.jpeg">
+  
+  
+  
+  <title>SegmentQuery - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/seashore.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="SegmentQuery"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-06-06 12:02" pubdate>
+          June 6, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.1k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">SegmentQuery</h1>
+            
+            <div class="markdown-body">
+              
+              <h1 id="区间问题"><a href="#区间问题" class="headerlink" title="区间问题"></a>区间问题</h1><h2 id="QuickView"><a href="#QuickView" class="headerlink" title="QuickView"></a>QuickView</h2><p>读者可以自行思考一个问题：对于一个数组 a，如果我想对 a 的进行以下三种操作，在不使用本文数据结构的情况下，暴力算法的时间复杂度为多少：</p>
+<ul>
+<li><p>单点修改，区间查询：将第x个元素加k，求出 [x, y] 的区间和。</p>
+</li>
+<li><p>区间修改，单点查询：将 [x, y] 区域内的元素加k，并且求出第$ i (x &lt;&#x3D; i &lt;&#x3D; y) $个元素的值。</p>
+</li>
+<li><p>区间修改，区间查询：将 [x1, y1] 区域内的元素加k，并求出 [x2, y2] 的区间和</p>
+</li>
+</ul>
+<h2 id="本文介绍数据结构"><a href="#本文介绍数据结构" class="headerlink" title="本文介绍数据结构"></a>本文介绍数据结构</h2><ul>
+<li><p>差分数组</p>
+</li>
+<li><p>树状数组</p>
+</li>
+<li><p>线段树</p>
+</li>
+</ul>
+<h3 id="差分数组"><a href="#差分数组" class="headerlink" title="差分数组"></a>差分数组</h3><p>定义：假设原数组为: <code>a = int[]&#123;2,5,7,3,6,9&#125;</code>，则差分数组b 的每一项为：<br>$$<br>b(i)&#x3D;\left{ \begin{aligned}  &amp; a[i] - a[i-1], i &gt; 0 \ &amp; a[0], i&#x3D;0 \ \end{aligned} \right.<br>$$<br>如下图所示。</p>
+<table>
+<thead>
+<tr>
+<th>index</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a[i]</td>
+<td>2</td>
+<td>5</td>
+<td>7</td>
+<td>3</td>
+<td>6</td>
+<td>9</td>
+</tr>
+<tr>
+<td>b[i]</td>
+<td>2</td>
+<td>3</td>
+<td>2</td>
+<td>-4</td>
+<td>3</td>
+<td>3</td>
+</tr>
+</tbody></table>
+<h4 id="差分数组的性质"><a href="#差分数组的性质" class="headerlink" title="差分数组的性质"></a>差分数组的性质</h4><ul>
+<li>性质一：</li>
+</ul>
+<p>求原数组中元素 a[i]，相当于求差分数组的前缀和<br>$$<br>a[i] &#x3D; \sum_{j&#x3D;0}^{i}b[j]<br>$$</p>
+<ul>
+<li>性质二：<ul>
+<li><p>求原数组中的前缀和：$\sum_{i&#x3D;0}^{x}a[i] $，代入上式可得：</p>
+</li>
+<li><p>$\sum_{i&#x3D;0}^{x}a[i] &#x3D; \sum_{i&#x3D;0}^{x}\sum_{j&#x3D;0}^{i}b[j] &#x3D; \sum_{i&#x3D;0}^{x} (x-i+1)*b[i] $</p>
+</li>
+<li><p>关于第二个等号，可以举个例子来说明：</p>
+</li>
+<li><p><img src="/img/tech/SegmentQuery/diff_array_eg.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="差分数组的用途"><a href="#差分数组的用途" class="headerlink" title="差分数组的用途"></a>差分数组的用途</h4><blockquote>
+<p>区间修改，区间查询</p>
+</blockquote>
+<ol>
+<li>快速处理区间修改操作</li>
+</ol>
+<p>区间修改的操作可以分两步执行，例如对于操作给 [x, y] 区间加 K 这个操作：</p>
+<ul>
+<li><p>b[x] +&#x3D; K</p>
+</li>
+<li><p>b[y+1] -&#x3D; K</p>
+</li>
+</ul>
+<ol>
+<li>快速处理区间查询问题</li>
+</ol>
+<p>由性质二，可以在O(n) 的时间范围内查出原数组的前缀和；对于区间 [L, R] 的和为：</p>
+<p>$SUM_{L, R} &#x3D; SUM[R] - SUM[L-1] $</p>
+<p>对于区间查询的问题，可以通过进一步地维护一个额外的空间来Trade-Off来压缩时间复杂度，感兴趣的读者可以自行了解。</p>
+<h3 id="树状数组"><a href="#树状数组" class="headerlink" title="树状数组"></a>树状数组</h3><p>树状数组 t[x] 的每一个元素保存了以x为根节点的子树中叶子节点值的和，如下图所示。</p>
+<p><img src="/img/tech/SegmentQuery/TreeArray.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><strong>Lowbit 操作</strong></p>
+<p>Lowbit(x): 表示x在二进制位表示下最低位的1及其之后的0构成的数值。如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs Plain">lowbit(44) = lowbit(0b101100) = (0b100) = 4<br></code></pre></td></tr></table></figure>
+
+<p>对于任意一个数 x 来说，它的lowbit值为：<code>lowbit(x) = x &amp; (-x)</code></p>
+<p><strong>性质</strong></p>
+<ul>
+<li><p>在t[x] 数组中，Lowbit(x) 表示了t[x] 覆盖的元素个数。</p>
+</li>
+<li><p>t[x - lowbit(x)+1] 为 t[x] 覆盖原数组的第一个元素</p>
+</li>
+<li><p>t[x + lowbit(x)] 为 t[x] 在树状数组中的父节点元素</p>
+</li>
+</ul>
+<p><strong>使用场景</strong></p>
+<blockquote>
+<p>单点修改，区间查询</p>
+</blockquote>
+<p>树状数组对于以下场景的计算具备良好的时间效率：</p>
+<ul>
+<li><strong>单点修改，区间查询</strong>，例如：修改 a[i]， 查询 $SUM_{L,R} $</li>
+</ul>
+<p>反应到树状数组中，主要提供两个API：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Plain">Ask(x): Return the sum value from 0 to x<br>Add(x, k): Add k to x<br></code></pre></td></tr></table></figure>
+
+<p>对于Ask(x) 操作，从树状数组 t[x] 开始，往树的根节点方向寻找元素并相加，直到最顶层。伪代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Go">sum := <span class="hljs-number">0</span><br><span class="hljs-keyword">for</span> i:=x;i&gt;<span class="hljs-number">0</span>;i-=lowbit(i) &#123;<br>    sum += t[i]<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>对于Add (x, K) 操作，从树状数组 t[x] 开始，往树的根节点方向寻找元素，并且把寻找到的每个元素值加 K，直到最顶层。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Go"><span class="hljs-keyword">for</span> i:=x;i&lt;n;i+=lowbit(i)&#123;<br>    t[i] += K<br>&#125;    <br></code></pre></td></tr></table></figure>
+
+<h3 id="线段树"><a href="#线段树" class="headerlink" title="线段树"></a>线段树</h3><p><img src="/img/tech/SegmentQuery/%E7%BA%BF%E6%AE%B5%E6%A0%91.jpg" srcset="/img/loading.gif" lazyload alt="线段树"><br>线段树解决的问题是：区间修改，区间查询。</p>
+<p>线段树的每个叶子节点对应原数组中的值，每个非叶子节点表示子节点的节点值之和。</p>
+<p>每个节点的数据结构如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">struct</span> TreeNode&#123;<br>  left, right <span class="hljs-type">int</span> <span class="hljs-comment">// 表示当前节点覆盖的最左和最右节点的下标</span><br>  val <span class="hljs-type">int</span> <span class="hljs-comment">// 表示当前节点的节点值</span><br>  lazy <span class="hljs-type">int</span> <span class="hljs-comment">// lazy标记</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>区间查询</strong>的一般步骤为，自顶向下地递归查询：</p>
+<ol>
+<li>遇到query 区间和当前节点区间不相交的时候直接返回0；</li>
+<li>如果query 区间完全覆盖当前节点的区间，则直接返回当前节点的值；</li>
+<li>如果query 区间和当前节点的区间相交，则向下寻找被完全覆盖的节点并且返回该节点的值。</li>
+</ol>
+<p><strong>区间更新</strong>的操作为</p>
+<blockquote>
+<p>大体包括四个步骤：判断是否覆盖 -&gt; 看是否有lazy标记 -&gt; lazy标记下推 -&gt; 更新左右节点 -&gt; 更新父节点</p>
+</blockquote>
+<ol>
+<li>如果Query 区间完全覆盖当前区间则给当前区间打上Lazy标记后返回，回溯的过程中更新父节点的值；</li>
+<li>如果Query 区间完全覆盖的区间上有lazy标记，则将lazy标记下推，下推的操作是将当前的lazy操作应用到两个子节点上，然后返回，回溯的过程中更新父节点的值；</li>
+</ol>
+<h3 id="使用场景的总结"><a href="#使用场景的总结" class="headerlink" title="使用场景的总结"></a>使用场景的总结</h3><p><img src="/img/tech/SegmentQuery/%E5%8C%BA%E9%97%B4%E9%97%AE%E9%A2%98%E6%80%BB%E7%BB%93.png" srcset="/img/loading.gif" lazyload alt="区间问题总结"></p>
+<h3 id="可能帮助你理解的例子"><a href="#可能帮助你理解的例子" class="headerlink" title="可能帮助你理解的例子"></a>可能帮助你理解的例子</h3><h4 id="732-我的日程安排表-III"><a href="#732-我的日程安排表-III" class="headerlink" title="732. 我的日程安排表 III"></a><a target="_blank" rel="noopener" href="https://leetcode.cn/problems/my-calendar-iii/">732. 我的日程安排表 III</a></h4><h4 id="1109-航班预订统计"><a href="#1109-航班预订统计" class="headerlink" title="1109. 航班预订统计"></a><a target="_blank" rel="noopener" href="https://leetcode.cn/problems/corporate-flight-bookings/">1109. 航班预订统计</a></h4><p><strong>For More Information:</strong> <a target="_blank" rel="noopener" href="https://github.com/SharingSource/LogicStack-LeetCode">SharingSource</a></p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Algorithm/">#Algorithm</a>
+      
+        <a href="/tags/High-Advanced-DS/">#High Advanced DS</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>SegmentQuery</div>
+      <div>https://garygky.github.io/2022/06/06/SegmentQuery/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>June 6, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/06/10/DistributedLock/" title="Distributed Lock">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Distributed Lock</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/06/03/OnceInterviewPreparation/" title="记一次面试算法题准备过程">
+                        <span class="hidden-mobile">记一次面试算法题准备过程</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
