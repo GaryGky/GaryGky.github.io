@@ -1,0 +1,197 @@
+---
+title: Dynamo
+date: 2022-05-22 12:40:45
+index_img: /img/cover/Dynamo.png
+banner_img: /img/bg/seashore.jpeg
+tags: [Distributed Storage, NoSQL, Amazon]
+---
+
+Dynamo: Amazon's High Available KV Store
+
+DynamoDB是Amazon平台上构建的 "always on" availability 级别的NoSQL数据库，并且能做到无缝扩展 (high-scalability)。为了实现这个级别的可用性，它在某些故障场景中将不可避免的牺牲一致性。
+最重要的两个核心点：High-Availability & Scalability.
+尽管牺牲了强一致性，Dynamo也是一个划时代的产品，他证明了去中心化也能够为系统提供高可用需求，同时Dynamo的成功也证明了最终一致性的DB基础架构也不失为高可用系统的一块基石。
+
+推荐阅读：为了更好的体验，推荐移步至 [飞书Dynamo](https://lo845xqmx7.feishu.cn/docs/doccnAYOAFo5OQPUCapBWMqNAzb)
+
+Introduction
+亚马逊作为电商巨头，它对于用户能够添加购物车的场景尤为重视，Dynamo的提出很大程度上是受“加购”这个场景的驱动。它对于系统的要求是服务必须总是能够为用户提供 加购 和 查看购物车的功能，不论DC是否受到了灾难或者网络是否可达。
+此外，Dynamo提供了可用性和扩展性的配置选项，因为在Amazon很多业务都需要根据自身的场景选择不同的存储系统，至少会有不同的存储需求。比如很多场景都只需要访问数据的主键，如果使用传统的关系型数据库则会出现性能瓶颈。
+Dynamo 基于业界熟知的算法来满足对可用性和扩展性的需求：
+- 一致性Hashing：For Partition & Replication
+- Object Version：For Consistency
+- Quorum Read / Write
+- Gossip: Failure Detecting & Membership Protocol
+系统的假设 / 要求
+1. Query Model对数据项简单的读写是通过Primary Key做的状态存储为一个由唯一键确定的二进制对象。没有横跨多个数据项的操作，也不需要关系方案。
+Dynamo主要用于小数据的存储，它的Store Server价格一定会高于GFS的Chunk Server。
+
+2. ACID属性：在保证ACID的数据存储往往有很差的可用性，DynamoDB的目标应用程序是保证高可用性，弱一致性。
+Dynamo 不提供任何隔离级别，因为它只允许单个Key上进行操作。
+
+3. Efficiency：系统需运作在一般的Commodity Hardware上，服务必须能够通过配置Dynamo使他们不断达到延迟和吞吐量的要求。衡量Dynamo 性能的指标是 P99.9。
+Design Consideration
+很多传统的商务系统都会使用同步复制在多副本之间进行数据拷贝，为了实现这种级别的强一致性，系统会在网络不可达或者机器failover的时候被阻塞。
+对网络延迟和服务宕机敏感的系统来说，可以通过乐观复制的技术来提升服务的可用性，即：数据的变化可以在后台更新，并发断网的操作也是可以执行的（并发断网：我理解是服务某个用户的Server和集群断连，多个用户的server可能同时面临这种情况；但是在该情况下仍然需要保证服务可用）。这样一来就会出现数据冲突Conflict， 设计时就需要考虑由谁在什么时候解决数据冲突的问题。
+- 对于When解决冲突：很多传统的系统为了实现一致性，都使用了同步复制的方式，即：在Write的时候限制了Write不能达到所有的数据节点，则认为这个Write不能成功；而Read的时候可以向任一Server发起读请求，读到的都是最新的数据，简化了Read的逻辑。Dynamo采取了另一种思路：保证Write总是能成功，但是Read的时候需要做一些逻辑来保证一致性。（为了提升用户体验，如果用户发现自己无法将商品加入购物车，很可能就不会购买该商品，公司则会亏钱）。
+- 对于Who解决冲突：Dynamo作者的思路是，如果将Reconciliation的逻辑放在DB层，那么用户可能没有自定义解决冲突的能力，因为DB层处理冲突通常都是采取LWW (Last-Write-Win) 的方式（可以想想MySQL是如何处理事务冲突的：Transaction）。从另一个思路来看，业务层其实是对某个场景的上下文理解比较全面的，所以Dynamo将冲突的处理留给了业务层。它向业务返回的时候，可能会返回多个版本，由用户来进行Merge。
+
+核心设计点：
+动态增长的Server Node
+对称：所有的节点一视同仁，没有特殊节点服务于特殊流量
+去中心化：Peer-to-Peer 没有Leader决定Log Index
+Heterogeneity：Server能够承担的流量要和Server主机的性能成线性关系
+
+Related Works
+1. Peer-to-Peer (P2P) Systems
+第一代P2P存储系统：Freenet and Gnutella 文件共享系统，特点是一次查询请求会通过洪泛法[2]将请求发送给系统中的其他节点，尽可能多的找到保存了查询数据的节点以返回。
+第二代P2P存储系统：Pastry & Chord，每一个节点保存一份路由信息，在O(1)的时间内找到系统中负责对应请求的节点。在此基础之上，OceanStore & PAST也被工程师提出。OceanStore支持事务和持久化，它采用了为每一个事务赋予全局顺序的方式来解决冲突 (Conflict Resolution)。PAST则室友了一个抽象层来实现持久化存储。
+2. 分布式文件系统
+P2P系统的路由表（也是命名空间的一种）只能保存简单的节点信息，而分布式系统的 NameSpace能够保存级联的路由信息。
+产品：Farsite System (类似NFS的文件系统，去中心化)，GFS 是谷歌内部使用的中心化 (Single Master) 的文件系统 Google File System， Bayou 分布式RDB，提供最终一致性以及离线操作。
+Bigtable 提供强一致的结构化数据存储，它的底层是使用多级的 `sorted map`实现。
+这里想特别提一嘴的产品是 Antiquity，因为这个产品是笔者第一次见到能够抵御拜占庭故障的产品，它主要是为信托机构提供数据的强一致性。
+
+3. 讨论
+Dynamo关注的点和传统的去中心化，面向强一致的存储系统不同，针对Amazon的电商场景，Dynamo更加注重用户的体验，为了让系统在网络分区的环境下仍然能够正常的运行。
+Dynamo 使用场景的特殊性：
+- 在 Failure & Concurrent 的条件下提供 "Always Writable" 的数据存储服务。
+- 应用在Amazon内部应用的基础架构层，所以可以保证所有节点都不是拜占庭节点。
+- 使用Dynamo的应用不会像文件系统那样出现级联的命名空间，以及复杂的关联模型，而是简单的KV模型。
+- SLA级别：P99.9 要在几百毫秒内，提供给对延迟较为敏感的业务系统使用。
+ System Design
+1. Dynamo API
+get: key -> ([value], context)
+Exposes inconsistency: can return multiple values
+Context is opaque to user (set of vector clocks)
+Put: (key, value, context) -> void
+Caller passes context from previous get
+
+Context：包含了系统对于key的metadata，它是和key-value一起存储的，用户不需要对Context理解。Dynamo会将 key和value都视为一个字节序列，它会将key先用MD5 Hash进行加密得到128-bit的标识符，用于一致性Hashing决定哪个节点作为其Coordinator。
+2. Partitioning
+主要使用的是一致性Hashing，为了保证增加和删除节点的时候，系统每个节点的流量变化更加平均。更多Partition的信息可以参考：Partition is All You Need
+3. Replication
+Dynamo中三个可配置的参数: (N, R, W)
+N 同一份数据需要复制到多少个节点上；
+R 每次最少从R个节点中读取数据；
+W 每次最少得到W个节点的Write数据；
+
+通过一致性Hashing，可以计算出一个Key的Coordinator节点，这个节点除了将key写入到本地之外，还会在哈希环中顺时针寻找N-1个节点，同步到N-1个其他的节点中。一个Key对应多个Nodes，这些为同一个Key提供服务或者备份的节点称为节点的 "Preference List"，并且为了容错，preference list通常会包含多于N个节点，它只会包含物理节点信息，而不会包含虚拟节点信息（物理节点和虚拟节点的概念，需要读者自行了解一致性Hashing的原理）。
+4. Data Versioning
+Dynamo为上层应用提供最终一致性，因此所有write的操作都是异步地向Replica传递，一个Put操作可以在收到所有Replica的Ack之前向Caller返回结果（但必须大于超参W），所以Read操作是有可能读到Stale Data的。
+在Amazon场景中可以允许Read到旧数据的，但是必须保证用户的Write操作不能被覆盖，比如：“加入购物车”和“删除购物车”，即使网络分区或者部分服务不可用的情况下，也要保证用户的写一定会生效，比如加入购物车的商品一旦加入，在未来的某个时刻用户必须能读到这个商品。过程中产生的冲突可以通过Reconciliation修复。
+为了实现以上系统要求，Dynamo会将每一个更新操作后的数据视为不可变对象，并且允许系统中存在一个对象的多个版本，比如：Node-A上存在商品A，Node-B上存在商品B，Node-C上存在商品C。在大多数情况下，Dynamo本身就能在DB-Level对数据冲突进行修复（使用LWW），但如果同一个对象的状态因为并发写 & 网络问题出现了Branch，就需要在Application-Level进行Merge。
+
+应用层在使用Merge策略的时候，能够保证Add的商品一定不会丢失，但是Delete的商品不一定能够删除，提升用户的购买率。
+
+为了使系统中能够存在多个版本的数据，Dynamo为每个对象添加了Vector Clock，VC用来表示系统中两同一个Object两个Branch的逻辑先后顺序，如果两个Branch是可比较的那么DB层保留最新的版本；如果两个版本是冲突的，则需要应用层进行Merge，每个Vector Clock表示为：
+struct ClockNode{
+    Node ServerNode,
+    Counter int64,
+}
+
+struct VectorClock{
+    VectorNodeItem list<ClockNode>
+}
+
+
+
+在PUT的时候，Dynamo要求Client指定Version，Application包含在Context中传递给DB。如果Dynamo遇到了DB层无法合并的Branch，则会将所有状态都返回给Client，Client必须Issue一个新的Put请求，来解决冲突。理论上，如果存在Conflict的Branch越多，需要存储的Version Data越多，那么Context会膨胀，很吃内存。但Dynamo Paper中说实际上这种情况十分罕见，因为Writes总是会被分配到Preference List中Top N个节点，当出现网络分区的时候会造成Branching的情况，这种情况下需要对Vector Clock的大小进行限制（限制List的length），假设只允许存储10个ClockNode，当达到阈值时会采用FIFO策略进行淘汰。
+Author们说在实际生产环境中很少遇到这种问题，因此也没有深入研究过这块算法。
+
+5. Get 和 Put操作的执行
+负载均衡的方式：
+- 使用LB中间件对Client的请求进行转发，这样Client不用感知Cluster中的节点。
+- 让Client感知所有Partition，并直接对合适的Partition发起请求，这种方式会更快，因为不用LB转发。
+Coordinator：处理Client请求的节点，通常是Preference List中Top N中的第一个节点。如果通过LB的方式选择Node，则需要考虑LB指定的Node是否在Preference List的Top N中，如果在的话，则成功成为Coor；如果不在的话，则需要将请求转发给Preference List中第一个节点。Top N个节点是Healthy的节点，即不存在网络分区的节点；当网络分区出现的时候，lower ranked的Node也会被Client访问到。
+Dynamo Quorum：(N, R, W) 通常的配置是 (3, 2, 2)。
+Dynamo Sloppy Quorum: R + W > N （和Paxos类似，Paxos中使要求任何请求都获得大多数节点的认可，Dynamo只需要 R+W>N 就能保证每次读到最新的结果，即使这些结果有冲突）。 
+- "Never Block Waiting for Unreachable Nodes"；
+- "Each Key Has Replicas > N"
+- Hinted  Handoff: 当Failover出现的时候，Dynamo并不总是会选择TopN of Preference List。比如Consistency Hashing Ring如下图所示，如果A不可达，那么A上的Replica会被转移到D上，并且被转移的Replica上会携带一个HintNode的标志，表示它原先是属于A节点的Replica，当系统检测到A节点恢复之后D会把Replica返回给A，然后从本地存储中删除。
+通过Hinted Handoff，Dynamo保证了系统总是能够保证Read / Write能够正常执行，即使出现了暂时的Node Failover或者网络不可达。
+Dynamo Cross DC Strategy: 由于Dynamo天然的Leaderless架构，支撑了它能够很好的扩展到不同的DC中，在Dynamo中一个Key的Preference List总是由不同DC的节点组成，并且每一份副本都会保存在不同的DC上，为了应对极端情况下DC断电或者网络短连，以及其他自然灾害。
+
+6. Membership and Failure Detection
+Ring Membership
+Gossip-Based：每一个Node定期与其他节点的通信，感知到系统中存在的节点，有点类似（Rip路由算法），每个Node随机地和两个节点通信获取他们c的信息，这样系统中不断的进行信息交换最终能够得到完整的“路由信息”，缺点和Rip一样，就是每次删除或者更新节点的时候，其他节点需要反应一段时间才能意识到新加入了节点。
+Join And Leave
+在早期的Dynamo架构中使用了Gossip-Based的方法对新加入的节点或者移除的节点进行检测，而后期加入了显示的Node Join and Leave。其实这是对Node Failover 和 Node Addition做了不同的策略，对于节点的Failover，系统认为这是一种短暂的状态，所以会通过gossip的方式进行传播；而对于永久加入或者移除一台Server，系统会认为这是一种永久的操作，如：在DC中加入了Server不会在短期内弃用，所以是通过显示通知的方式告知所有节点。
+Implementation
+无法复制加载中的内容
+Local Persistence
+Dynamo的持久化层是可插拔的，可以针对不同的业务适配不同的持久化层，比如：BDB (Berkerly Data Store)适用于10-100KB的数据，MySQL适合更大的数据等。
+Read Coordination 
+笔者理解Read Coordination是使用行为者模式设计的一种事件驱动模型，这一部分是整个Dynamo架构中的组织协调者，它将一个工作流拆分为不同的子阶段：
+无法复制加载中的内容
+在Coordinator得到所有Node的返回结果之后，会通过Version判断出最新的结果，并且会尝试更新那些保存着过期数据的节点，该过程被称为 Read-Repair。
+
+如果每次都选择Preference List中第一个节点作为Coordinator，可能会造成流量分布不均匀。为了解决这个问题，Dynamo中允许Preference List的Top N任意一个节点成为Coordinator。并且系统总是认为“每一个Write操作之后总会紧跟一个Read操作”，比如：（Write, A）, (Read, A)，那么前一个Write的Coordinator会自动成为后一个Read 的Coordinator，以此来增加“Read Your Write”成功的机会。
+
+Anti-Entropy
+Dynamo 使用了Merker Tree来检测不同副本之间的一致性以及最小化需要移动的增量数据。Merker Tree一种哈希树，它的叶子节点是每一个 Key的Hash值，非叶子节点是它子树节点的Hash值的和。Merker Tree最大的好处是在判断两个副本之间数据是否相同的时候，不一定需要加载整棵树结构。例如：如果两个副本根节点的Hash值相同，说明他们子树的值都是一致的，可以提前结束判断。如果副本根节点的Hash值不同，说明肯定存在至少一个数据副本是不一致的，此时需要遍历到树的根节点，找出所有不一致的数据副本，然后选择最新的内容进行同步。
+
+在Dynamo中，每一个节点会为它所负责的 每一个Key-Range (不同Virtual Nodes会产生不同的Partition) 维护一棵Merker Tree，然后使用树的遍历算法计算两棵树是否相同。
+
+Business Logic
+Dynamo最大的优势是作为Infra Storage 为上层提供了自定义解决冲突的方式。
+- 购物车场景；使用Merge的方式解决Version Conflict。
+- User Session场景使用：LWW的方式解决冲突。
+- Adjust Params：
+  - 对于Heavy Read场景可以将R设置为1，W设置为N。
+  - 对于Heavy Write场景，并且允许读到stale data的场景，可以将W设置为较小值，R响应增大。
+Performance Analysis
+- SLA: P99.9 = 300ms。
+2006 年Dynamo读写请求值的分布情况：
+- Write请求的延迟总是大于Read请求：Write请求通常需要Disk Access
+- Avg 总是低于 P99.9，因为P99.9 对流量洪峰、访问对象大小和网速更为敏感。
+
+Client Driven / Server Driven Dynamo
+- Client Driven
+Client保留一份集群中节点的分区信息副本，每次Write / Read 直接向对应的Node发起请求。
+- Server Driven
+Client 每次将Write / Read请求发送到LB，由LB选择Coordinator处理Client请求。
+
+Client Driven 的方式减少了IP包转发的次数，所以能够减少延迟。但是Client-Driven方式的效率很大程度取决于Client的local cache能够拿到多新的Cluster Image，在该方法中Client会周期性地 (10s) 随机地向 Dynamo Node 发起Pull请求，获取集群当前的信息。所以最坏的情况下，Client会保持10s的过期配置信息，但是Client会有一个热更新的操作当它检测到Node不可达会立即Pull一次Cluster Config。
+补充内容：Dynamo Data Model
+- Table, Items, Attributes
+- Primary Key
+- Secondary Key
+- DynamoDB Data Types
+- Item Distribution
+Table Item Attribute
+在RDB中，一个table有一个预先定义好的结构，比如：表名，主键，列名。而DynamoDB只需要一个主键，不需要提前定义各种属性或者数据类型，DynamoDB中的独立item可以拥有任何数量的属性，但每个item的size不能超过400KB。
+Items中的每个属性都是一个 (K, V) pair 这里的value可以是集合、列表、String等数据结构。
+Primary Key
+用于唯一标识一个item，DynamoDB中支持两种类型的主键。
+Partition Key（分区键）一种简单的Primary Key，仅有一个属性组成的Key，DynamoDB利用Key的Hash值计算Item应该被存储的分区 (Partition)。 
+Partition Key & Sorted Key：由分区键和排序键组合的主键，DynamoDB利用Value确定存储的分区，对于在同一个分区中的Key按照Sorted Key进行排序。
+注意：
+- Partition Key可以理解为 Hash Attribute，通过Hash计算，可以实现让Items 根据Key值平均分散到不同的位置上。
+在DynamoDB中，Partition Key的属性只能为String, Number, Binary
+- Sort Key 可以理解为 Range Attribute，利用Sorted Key可以确保拥有相同Partition Key的item在物理结构上按照顺序紧密的存储在一起。
+Secondary Index
+- Global Secondary Index：一种由Partition Key 和 Sorted 以外的Key组成的索引。
+- Local Secondary Index：一种由Partition Key和不同的Sorted Key组成的索引。
+Item Distribution
+DynamoDB 利用Partition 存储数据，Partition是基于SSD的并且会自动创建三个副本。
+1. 在只有Primary Key的情况下：
+如果table中有一个Primary Key，DynamoDB会基于这个Key确定这个Key的分区；读写过程都是先基于Primary Key找到对应的Partition，然后Load和Store Data。
+
+注意：Partition Key最好选择那些差异程度最大的属性，来最大程度上避免collision。
+2. Partition Key & Sorted Key
+写入的时候先根据Partition Key找到对应的物理分区，然后根据Sorted Key顺序写入；
+读取的时候可以根据Partition Key进行读取，并且能够在Sorted Key上添加condition条件。
+ 
+总结 & 启发
+Dynamo给我最大的启发就是它利用了一些业界的现有技术，打造了一个新概念的DB产品，很多Follow-UP的数据库都是基于Dynamo产生的，包括：RocksDB，VoltDB，以及字节内部使用的Abase，美团使用的TiDB。(A + B + C + D) 这种模式其实更多的被使用在学术界，笔者之前短暂从事过AI的研究工作，发现不少出名的工作都是基于“炒烂饭”被提出的。其实，借鉴前人的经验和工作并不是什么坏事，能够把握时机，在正确的时代背景下运用正确的技术手段也是一件伟大的工作。
+
+
+
+Reference
+- Dynamo Paper
+- OSPF
+- Vector Clock
+- Antiquity
+- Bayou
+- Google File System

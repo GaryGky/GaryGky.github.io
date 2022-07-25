@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+db.json
+_config.yml
+_config.fluid.yml
+*.log
+node_modules/
+public/
+.deploy*/
+_multiconfig.yml
+/.idea
