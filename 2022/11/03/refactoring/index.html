@@ -1,0 +1,756 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Bad Smells in codeLong FunctionIf you have a function with logs of parameters and temporary variables, they get in the way of extracting. Extract FunctionLooking at a fragment of code and figuring out">
+<meta property="og:type" content="article">
+<meta property="og:title" content="refactoring">
+<meta property="og:url" content="https://garygky.github.io/2022/11/03/refactoring/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="Bad Smells in codeLong FunctionIf you have a function with logs of parameters and temporary variables, they get in the way of extracting. Extract FunctionLooking at a fragment of code and figuring out">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/bg/promontory.jpeg">
+<meta property="article:published_time" content="2022-11-03T02:08:47.000Z">
+<meta property="article:modified_time" content="2022-11-03T02:14:45.946Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="Refactoring">
+<meta property="article:tag" content="Engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/bg/promontory.jpeg">
+  
+  
+  
+  <title>refactoring - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/opera-house.jpeg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="refactoring"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-11-03 10:08" pubdate>
+          November 3, 2022 am
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.3k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          61 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">refactoring</h1>
+            
+            <div class="markdown-body">
+              
+              <h1 id="Bad-Smells-in-code"><a href="#Bad-Smells-in-code" class="headerlink" title="Bad Smells in code"></a>Bad Smells in code</h1><h2 id="Long-Function"><a href="#Long-Function" class="headerlink" title="Long Function"></a>Long Function</h2><p>If you have a function with logs of parameters and temporary variables, they get in the way of extracting.</p>
+<h3 id="Extract-Function"><a href="#Extract-Function" class="headerlink" title="Extract Function"></a>Extract Function</h3><p>Looking at a fragment of code and figuring out what it’s doing, then you should extract it into a function and name the function after “what”. Programmers should take practice naming the function that can make the function more self-documenting.</p>
+<p><strong>Mechanism</strong></p>
+<ul>
+<li>Create a function and name it after the intent of the function (by what it does instead of how it does). If the code is as simple as a function call, it should be extracted if the new function name can reveal what the function is doing. If it can’t come with a more meaningful name, that’s sign of don’t extract.</li>
+</ul>
+<p>If the language supports nested functions, nest the extracted function inside the source function that will reduce the amount of out-of-scope variables to deal with.</p>
+<h3 id="Replace-Temp-with-Query"><a href="#Replace-Temp-with-Query" class="headerlink" title="Replace Temp with Query"></a>Replace Temp with Query</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">const</span> basePrice = <span class="hljs-variable language_">this</span>.<span class="hljs-property">quantity</span> * <span class="hljs-variable language_">this</span>.<span class="hljs-property">itemPrice</span>;<br><span class="hljs-keyword">if</span> (basePrice &gt; <span class="hljs-number">1000</span>)<br>    <span class="hljs-keyword">return</span> basePrice * <span class="hljs-number">0.95</span><br><span class="hljs-keyword">else</span> <br>    <span class="hljs-keyword">return</span> basePrice * <span class="hljs-number">0.98</span><br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Could be refactoring to</p>
+</blockquote>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">get</span> <span class="hljs-title function_">basePrice</span>() &#123;<span class="hljs-variable language_">this</span>.<span class="hljs-property">quantity</span> * <span class="hljs-variable language_">this</span>.<span class="hljs-property">itemPrice</span>;&#125;<br>...<br><span class="hljs-keyword">if</span> (<span class="hljs-variable language_">this</span>.<span class="hljs-property">basePrice</span> &gt; <span class="hljs-number">1000</span>)<br>    <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>.<span class="hljs-property">basePrice</span> * <span class="hljs-number">0.95</span><br><span class="hljs-keyword">else</span> <br>    <span class="hljs-keyword">return</span> <span class="hljs-variable language_">this</span>.<span class="hljs-property">basePrice</span> * <span class="hljs-number">0.98</span><br></code></pre></td></tr></table></figure>
+
+<p>Using function instead of variables also allows us to avoid duplicating the calculation logic in similar functions. <strong>Whenever I see variables calculated in the same way in different places, I look to turn them into a single function</strong>.</p>
+<p><strong>Mechanism</strong></p>
+<ul>
+<li><p>Check the variables are determined entirely before they ‘re used and this code that calculates them does not yield a different value whenever it is used</p>
+</li>
+<li><p>If the variable isn’t read-only and can be made read-only, do so</p>
+</li>
+</ul>
+<h3 id="Replace-function-with-command"><a href="#Replace-function-with-command" class="headerlink" title="Replace function with command"></a>Replace function with command</h3><p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=NGM4YTQ3MWUwNDQzNDQ0MDNjMzJkZjY1NmMyYWY2ZDdfWm5SazZpdE5JYVg1ZWFPaTdsVVJUaEx2c3o5ZWhyaXlfVG9rZW46Ym94Y25Zd0VCc3BFOHpDdmtDTWpHYWRpb0xnXzE2Njc0NDE2NDI6MTY2NzQ0NTI0Ml9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>Functions are one of the fundamental buildings. But there are times when it’s useful to encapsulate a function into its own object (command object). (Like runner in <code>compliance.kyc`). A commander offers more flexibility than normal function. For example, the commander object could provide </code>undo&#96; operation. It can provide methods to build parameters thus supporting a richer lifecycle.</p>
+<blockquote>
+<p>Commander is tool that trades flexibility off complexibility.</p>
+</blockquote>
+<p>Given the choice between function and commander, I will pick function 95% off the time. I only use a command when I specifically need a facility that simpler approaches can’t provide.</p>
+<p><strong>Mechanism</strong></p>
+<ul>
+<li><p>Create an empty class for the function. Name it based on the function</p>
+</li>
+<li><p>Move function to the empty class and keep the original function as a forwarding function until at least the end of the refactoring. Follow any convention the language has for naming commands such as “execute”, or “call”</p>
+</li>
+</ul>
+<h2 id="Long-Parameter-List"><a href="#Long-Parameter-List" class="headerlink" title="Long Parameter List"></a>Long Parameter List</h2><blockquote>
+<p>If one parameter can be computed by another parameter, then <strong>replace that parameter with query</strong></p>
+</blockquote>
+<h3 id="Replace-Parameter-with-Query"><a href="#Replace-Parameter-with-Query" class="headerlink" title="Replace Parameter with Query"></a>Replace Parameter with Query</h3><p>The function parameters should avoid any duplication as the statement in the code.</p>
+<blockquote>
+<p>Rather than pulling lots of data out of an existing data structure, you can use <strong>Preserve whole Object</strong> to pass the original data structure instead.</p>
+</blockquote>
+<h3 id="Preserve-whole-Object"><a href="#Preserve-whole-Object" class="headerlink" title="Preserve whole Object"></a>Preserve whole Object</h3><p>Pulling several field values from object to do some logic them alone is a smell (Feature Envy) and usually a signal that this logic should be moved into the whole itself. </p>
+<p>One case that many people miss is when an object calls another object with several of its own data values. If I see this, I can replace the whole value with a self-reference (&#96;&#96;this&#96; in Java).</p>
+<blockquote>
+<p>If several parameters always fit together, combine them with <strong>introduce parameter object</strong></p>
+</blockquote>
+<h3 id="Introduce-Parameter-Object"><a href="#Introduce-Parameter-Object" class="headerlink" title="Introduce Parameter Object"></a>Introduce Parameter Object</h3><p>If the groups of data often travel together, appearing in function after function, such a group is a data clump, and I like to replace it with a single data structure.</p>
+<p>It makes explicit the relationship between data items and reduces the size of parameter of a function. It helps consistency since all functions that use the structure will use the same names to get at its elements.</p>
+<blockquote>
+<p>If a parameter is used as a flag to dispatch different behavior, use <strong>Remove Flag Argument</strong></p>
+</blockquote>
+<h3 id="Remove-Flag-Argument"><a href="#Remove-Flag-Argument" class="headerlink" title="Remove Flag Argument"></a>Remove Flag Argument</h3><p>A flag argument is a function argument that the caller uses to indicate which logic the called function should execute. </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">boookConcert</span>(<span class="hljs-params">aCustomer, isPremium</span>)&#123;<br>    <span class="hljs-keyword">if</span>(isPremium)&#123;<br>        ...<br>    &#125;<br>    <span class="hljs-keyword">else</span> &#123;<br>        ...<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>The flag argument complicates the process of understanding what function calls are available and how to call them. My first route into an API is usually the list of available functions and flag arguments hide the difference in the functions. Boolean flags are even worse because they don’t convey their meaning to the reader. </p>
+<p>To remove the flag argument, we need to create an explicit function for each value of the parameter. If the main function has a clear dispatch conditional, use Decompose Conditional to <strong>create the explicit functions</strong>. Otherwise, create <strong>wrapping functions</strong>. And then for each caller that uses a literal value for the parameter, replace it with a call to the explicit function.</p>
+<p>Examples</p>
+<p><strong>Caller</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript">aShipment.<span class="hljs-property">deliveryDate</span> = <span class="hljs-title function_">deliveryDate</span>(anOrder, <span class="hljs-literal">true</span>);<br>aShipment.<span class="hljs-property">deliveryDate</span> = <span class="hljs-title function_">deliveryDate</span>(anOrder, <span class="hljs-literal">false</span>);<br></code></pre></td></tr></table></figure>
+
+<p><strong>Function</strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">deliveryDate</span>(<span class="hljs-params">anOrder, isRush</span>) &#123;<br>  <span class="hljs-keyword">if</span> (isRush) &#123;<br>    <span class="hljs-keyword">let</span> deliveryTime;<br>    <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;MA&quot;</span>, <span class="hljs-string">&quot;CT&quot;</span>]     .<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;NY&quot;</span>, <span class="hljs-string">&quot;NH&quot;</span>].<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">else</span> deliveryTime = <span class="hljs-number">3</span>;<br>    <span class="hljs-keyword">return</span> anOrder.<span class="hljs-property">placedOn</span>.<span class="hljs-title function_">plusDays</span>(<span class="hljs-number">1</span> + deliveryTime);<br>  &#125;<br>  <span class="hljs-keyword">else</span> &#123;<br>    <span class="hljs-keyword">let</span> deliveryTime;<br>    <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;MA&quot;</span>, <span class="hljs-string">&quot;CT&quot;</span>, <span class="hljs-string">&quot;NY&quot;</span>].<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;ME&quot;</span>, <span class="hljs-string">&quot;NH&quot;</span>] .<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">3</span>;<br>    <span class="hljs-keyword">else</span> deliveryTime = <span class="hljs-number">4</span>;<br>    <span class="hljs-keyword">return</span> anOrder.<span class="hljs-property">placedOn</span>.<span class="hljs-title function_">plusDays</span>(<span class="hljs-number">2</span> + deliveryTime);<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>Since the branch condition is not complicated, we can explicitly decompose the two branches: </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">rushDeliveryDate</span>(<span class="hljs-params">anOrder</span>) &#123;<br>    <span class="hljs-keyword">let</span> deliveryTime;<br>    <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;MA&quot;</span>, <span class="hljs-string">&quot;CT&quot;</span>]     .<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">1</span>;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;NY&quot;</span>, <span class="hljs-string">&quot;NH&quot;</span>].<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">else</span> deliveryTime = <span class="hljs-number">3</span>;<br>    <span class="hljs-keyword">return</span> anOrder.<span class="hljs-property">placedOn</span>.<span class="hljs-title function_">plusDays</span>(<span class="hljs-number">1</span> + deliveryTime);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>And</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">rugularDeliveryDate</span>(<span class="hljs-params">anOrder</span>) &#123;<br>    <span class="hljs-keyword">let</span> deliveryTime;<br>    <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;MA&quot;</span>, <span class="hljs-string">&quot;CT&quot;</span>, <span class="hljs-string">&quot;NY&quot;</span>].<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> ([<span class="hljs-string">&quot;ME&quot;</span>, <span class="hljs-string">&quot;NH&quot;</span>] .<span class="hljs-title function_">includes</span>(anOrder.<span class="hljs-property">deliveryState</span>)) deliveryTime = <span class="hljs-number">3</span>;<br>    <span class="hljs-keyword">else</span> deliveryTime = <span class="hljs-number">4</span>;<br>    <span class="hljs-keyword">return</span> anOrder.<span class="hljs-property">placedOn</span>.<span class="hljs-title function_">plusDays</span>(<span class="hljs-number">2</span> + deliveryTime);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>So the previous caller would be like below and we successfully remove the flag argument</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript">aShipment.<span class="hljs-property">deliveryDate</span> = <span class="hljs-title function_">rushDeliveryDate</span>(anOrder);<br>aShipment.<span class="hljs-property">deliveryDate</span> = <span class="hljs-title function_">rugularDeliveryDate</span>(anOrder);<br></code></pre></td></tr></table></figure>
+
+<p>When the condition is too complex to decouple, like</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">deliveryDate</span>(<span class="hljs-params">anOrder, isRush</span>) &#123;<br>  <span class="hljs-keyword">let</span> result;<br>  <span class="hljs-keyword">let</span> deliveryTime;<br>  <span class="hljs-keyword">if</span> (anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;MA&quot;</span> || anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;CT&quot;</span>)<br>    deliveryTime = isRush? <span class="hljs-number">1</span> : <span class="hljs-number">2</span>;<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;NY&quot;</span> || anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;NH&quot;</span>) &#123;<br>    deliveryTime = <span class="hljs-number">2</span>;<br>    <span class="hljs-keyword">if</span> (anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;NH&quot;</span> &amp;&amp; !isRush)<br>      deliveryTime = <span class="hljs-number">3</span>;<br>  &#125;<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (isRush)<br>    deliveryTime = <span class="hljs-number">3</span>;<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (anOrder.<span class="hljs-property">deliveryState</span> === <span class="hljs-string">&quot;ME&quot;</span>)<br>    deliveryTime = <span class="hljs-number">3</span>;<br>  <span class="hljs-keyword">else</span><br>    deliveryTime = <span class="hljs-number">4</span>;<br>  result = anOrder.<span class="hljs-property">placedOn</span>.<span class="hljs-title function_">plusDays</span>(<span class="hljs-number">2</span> + deliveryTime);<br>  <span class="hljs-keyword">if</span> (isRush) result = result.<span class="hljs-title function_">minusDays</span>(<span class="hljs-number">1</span>);<br>  <span class="hljs-keyword">return</span> result;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>We can layer functions over the delivery-date:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs JavaScript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">rushDeliveryDate</span>   (anOrder) &#123;<span class="hljs-keyword">return</span> <span class="hljs-title function_">deliveryDate</span>(anOrder, <span class="hljs-literal">true</span>);&#125;<br><span class="hljs-keyword">function</span> <span class="hljs-title function_">regularDeliveryDate</span>(<span class="hljs-params">anOrder</span>) &#123;<span class="hljs-keyword">return</span> <span class="hljs-title function_">deliveryDate</span>(anOrder, <span class="hljs-literal">false</span>);&#125;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>If there are several functions sharing the same parameter list, then you can use Combine function into class to capture those common values as fields.</p>
+</blockquote>
+<h3 id="Combine-functions-into-Class"><a href="#Combine-functions-into-Class" class="headerlink" title="Combine functions into Class"></a>Combine functions into Class</h3><h2 id="Feature-Envy"><a href="#Feature-Envy" class="headerlink" title="Feature Envy"></a>Feature Envy</h2><p>When we modularis a program, we try to separate the code into zones that maximize interaction inside a zone and minimize interaction between the zones. A classic case of Feature Envy is when a function in one module spends more time communicating with functions or data inside another module that it does within its own module. For example, a function invokes half-a-dozen getter methods on another object to calculate some value. It means that the function needs some data, so we can use Move Function to get it there.</p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Refactoring/">#Refactoring</a>
+      
+        <a href="/tags/Engineering/">#Engineering</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>refactoring</div>
+      <div>https://garygky.github.io/2022/11/03/refactoring/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>November 3, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/11/03/interview-guide/" title="interview-guide">
+                        <span class="hidden-mobile">interview-guide</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
