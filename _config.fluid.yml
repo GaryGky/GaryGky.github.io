@@ -136,7 +136,7 @@ about:
   avatar: /img/avatar.jpeg
   banner_img: /img/bg/sunrise.jpeg
   name: "Gan Kaiyuan (甘凯元)"
-  intro: "新加坡国立大学在读Master，TikTok 直播研发工程师，研究兴趣为：分布式系统，分布式存储，数据密集型系统和服务架构。"
+  intro: "Base: 新加坡 | 新加坡国立大学Master，TikTok工程师，研究兴趣为：分布式系统，分布式存储，数据密集型系统和服务架构。"
 
   icons:
     - { class: 'iconfont icon-github-fill', link: 'https://github.com/GaryGky', tip: 'GitHub' }
