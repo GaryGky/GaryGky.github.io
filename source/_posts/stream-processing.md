@@ -1,7 +1,7 @@
 ---
 title: stream-processing
 date: 2022-11-03 09:56:34
-index_img: /img/bg/seashore.jpeg
+index_img: /img/bg/uluru.jpeg
 banner_img: /img/cover/stream.jpg
 tags: [Big Data, Distributed System]
 ---
