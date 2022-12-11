@@ -1,0 +1,802 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/home_avatar.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Kaiyuan Gan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="The requirement for auto complete system should be:  Lightening fast reads. When users type in keywords, the service responds in a very fast way. Facebook found that an autocomplete needs to return s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="complete_system">
+<meta property="og:url" content="https://garygky.github.io/2022/12/11/complete-system/index.html">
+<meta property="og:site_name" content="甘凯元的博客">
+<meta property="og:description" content="The requirement for auto complete system should be:  Lightening fast reads. When users type in keywords, the service responds in a very fast way. Facebook found that an autocomplete needs to return s">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://garygky.github.io/img/cover/complete-system.png">
+<meta property="article:published_time" content="2022-12-11T13:07:42.000Z">
+<meta property="article:modified_time" content="2022-12-11T13:21:46.286Z">
+<meta property="article:author" content="Kaiyuan Gan">
+<meta property="article:tag" content="system design">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://garygky.github.io/img/cover/complete-system.png">
+  
+  
+  
+  <title>complete_system - 甘凯元的博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"garygky.github.io","root":"/","version":"1.9.0","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Kaiyuan&#39;s Blog (甘凯元)</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-books"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-apple-fill"></i>
+                AboutMe
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/bg/lighthouse.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="complete_system"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-12-11 21:07" pubdate>
+          December 11, 2022 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.5k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          55 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">complete_system</h1>
+            
+            <div class="markdown-body">
+              
+              <p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=Yzc4MmE3NGQ4ZjEwZjg3MWRlYzhiZTBlYTliMWY2YzRfYjZla1FJSHhYTnJZZkJVZEQ2S0R4SUM3TWJLdDBjWkdfVG9rZW46Ym94Y25aZkp5V0hGdDdOQjlZWXNwZDk4bmVmXzE2NzA3NjQxMDU6MTY3MDc2NzcwNV9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>The requirement for auto complete system should be:</p>
+<ul>
+<li><p>Lightening fast reads. When users type in keywords, the service responds in a very fast way. Facebook found that an autocomplete needs to return suggestions in <a target="_blank" rel="noopener" href="https://www.facebook.com/notes/10158791367817200/">less than 100 ms</a>.</p>
+</li>
+<li><p>Relavancy of suggestions: should return the most frequent query result from the database for one keyword.</p>
+</li>
+</ul>
+<p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=ZGE5MTkyYThkODhjMDRlNWJlZGNiZmI2OTk4NjU3NDhfS2NTR0NvSUJ3N3hOVk01ZVJ5dmY4R1pCUXNNRVJVbk1fVG9rZW46Ym94Y251aEx3blo3eEI0eWV2OWJoanFIR29lXzE2NzA3NjQxMDU6MTY3MDc2NzcwNV9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h1 id="Understand-the-problem-and-Establish-design-scope"><a href="#Understand-the-problem-and-Establish-design-scope" class="headerlink" title="Understand the problem and Establish design scope"></a>Understand the problem and Establish design scope</h1><ul>
+<li><p>Requirement Detail: Search Top-5 frequent suggestions for a keyword</p>
+</li>
+<li><p>User Scope: Assume there are 10 million DAU</p>
+</li>
+<li><p>No spell check</p>
+</li>
+<li><p>One of the important features of this system is that the suggested result is not user-specific. While on Facebook there is a lot of user-specific data such as <strong>feed</strong>.</p>
+</li>
+</ul>
+<h2 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back-of-the envelope-estimation"></a>Back-of-the envelope-estimation</h2><p><strong>Traffic</strong>: Assume that on average, one user will search 10 times a day and in each query there are 20 characters  </p>
+<p>QPS: 10,000,000 * 10 * 20 &#x2F; (24 * 60 * 60) &#x3D; 24000</p>
+<p>Peak QPS: 48000</p>
+<p><strong>Storage</strong>: each query contains 20 characters, so the size of a query is 20 bytes. It generates (10, 000, 000 * 10 * 20) bytes per day and assumes that the new query takes up 20% of the total queries.</p>
+<p>So the storage space increases 0.4 GB per day.</p>
+<h1 id="High-Level-Design"><a href="#High-Level-Design" class="headerlink" title="High Level Design"></a>High Level Design</h1><p>The client sends a request to the API gateway. The load balancer will choose one web server to handle the query request. </p>
+<p>The Web Server will first compute the top-5 frequent keyword queries from the query history and then increase the querying keywork count by 1.</p>
+<p>The storage layer could be NoSQL because the storage model does not need relational information and the query can be tolerated for <strong>eventually consistency. Availability weighs more in this scenario.</strong> Because we always expect the search server to respond to the user query and if the suggestion is not the up-to-date order, it will be acceptable.</p>
+<h2 id="System-Architechture"><a href="#System-Architechture" class="headerlink" title="System Architechture"></a>System Architechture</h2><p>You should clarify if the search service is for an active online search application like Twitter or an offline search like Google Search.</p>
+<p>The former one may require you to update the trie immediately, the latter one may tolerate the result is not up to date.</p>
+<p><img src="/../img/tech/system%20design/complete%20system/architecture.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>The update can not be simply done with incrby, because you must maintain the trie tree as well. It should not update the words but should also update the prefix. It would be too time-consuming if you wanted to do this in real time.</p>
+<h1 id="Dive-into-Deep"><a href="#Dive-into-Deep" class="headerlink" title="Dive into Deep"></a>Dive into Deep</h1><h2 id="Trie-Tree"><a href="#Trie-Tree" class="headerlink" title="Trie Tree"></a><a target="_blank" rel="noopener" href="https://leetcode.com/problems/implement-trie-prefix-tree/">Trie Tree</a></h2><p>For the <strong>auto complete</strong> problem, it is easy to recall that Trie tree fit the scenario well. In a view, the data structure would be like:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Java"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Trie</span>&#123;<br>    <span class="hljs-comment">// assume the qeury is converted to lower-case word,</span><br>    <span class="hljs-comment">// there are 26 characters at most</span><br>    Trie[<span class="hljs-number">26</span>] children;<br>    <span class="hljs-comment">// false : the node is not the end of any word</span><br>    <span class="hljs-comment">// true : the node is the end of some words</span><br>    bool isEnd;<br>    <span class="hljs-comment">// only valid when isEnd == true, record the frequency of a keyword</span><br>    <span class="hljs-type">int</span> frequency;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>A picture from <a target="_blank" rel="noopener" href="https://www.amazon.sg/System-Design-Interview-insiders-guide/dp/B08CMF2CQF/ref=asc_df_B08CMF2CQF/?tag=googleshoppin-22&linkCode=df0&hvadid=404658063268&hvpos=&hvnetw=g&hvrand=1585535126343690537&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9062543&hvtargid=pla-934212337151&psc=1">Alex Xu’s book</a>:</p>
+<p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=NWY1YjUwNWNiOGVhODY0YmU5ZDY3OGFhMWU5NzZiZWJfeUx4TmFTUE5sNEhVNGdNWUlUUmtBZXJDeWQ1RGhHZXNfVG9rZW46Ym94Y25nVkU5cnhDTDk0UTk0aG4zTXNackxlXzE2NzA3NjQxMDU6MTY3MDc2NzcwNV9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>Query Process: Query the word is to query the trie tree. If we find prefix in the trie tree, then we have to find all the children under the node and sort them within a heap to generate the top-5 results.</p>
+<p>The total time consists of three parts: O(L) + O(N) + O(KlogK)</p>
+<ul>
+<li><p>The first part is raised by the length of type-in keyword</p>
+</li>
+<li><p>The second part is all the completions in the Trie leafnodes</p>
+</li>
+<li><p>The third part is sorting out raw results</p>
+</li>
+</ul>
+<p>However, the process is really time-consuming, assume that the user only enters ‘s’ and you have to traverse all the leaf nodes starting with ‘s’. </p>
+<p>Quick Calculation:</p>
+<p>The time complexity is <strong>O(N)</strong> for querying the suggestion where N is the total number of keywords (completions) in the Trie. </p>
+<p>This is really a bottleneck of the system which increases the responding time.</p>
+<p>There are some optimization we can do to remove the above time bottleneck.</p>
+<h3 id="Remove-O-N"><a href="#Remove-O-N" class="headerlink" title="Remove O(N)"></a>Remove O(N)</h3><p>One possible way to improve the query process is to cache the <strong>top-5</strong> result for a node. In Google Search scenario, the top-5 result can read stale data for the reason that the suggestion can be a little bit outdated. While in the Twitter scenario, the top-5 results should be as accurate as possible.</p>
+<p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=NmVjMzViZmNlNTNiMjlmZTk0ZDYxZTQ2ODM4MDQ5MjBfY3pMWEFpRjVxNmIzaDNvdTJsZVZKbGJZU0draW1oYlFfVG9rZW46Ym94Y25wTzZhUURUTWxpNm1xSUJzOU5WOGRnXzE2NzA3NjQxMDU6MTY3MDc2NzcwNV9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>Trade-offs</p>
+<p>For the keyword ‘bee’, we have to store it multiple times in the node (‘b’, ‘be’, ‘bee’). <strong><a target="_blank" rel="noopener" href="https://medium.com/@prefixyteam/how-we-built-prefixy-a-scalable-prefix-search-service-for-powering-autocomplete-c20f98e2eff1">But since speed of reads was our priority, we were happy to make these trade offs</a>****.</strong></p>
+<h3 id="Remove-O-L"><a href="#Remove-O-L" class="headerlink" title="Remove O(L)"></a>Remove O(L)</h3><p>If we can limit the length of keywords, like we define the max length of L as 50 chars. For searching more than 50 chars, we can simple block the auto complete service. </p>
+<p>This is what Google Search does. You can try to paste different things into the search bar. And you may find that if you type in a sentence which is too long, there won’t be any suggestions.</p>
+<h3 id="Remove-O-KlogK"><a href="#Remove-O-KlogK" class="headerlink" title="Remove O(KlogK)"></a>Remove O(KlogK)</h3><p>To most of the auto- complete suggestions, it only requires us to generate the top5 or top10 related results. So the K can be regarded as a constant and O(KlogK) is nothing more than O(1).</p>
+<h2 id="How-to-Store-Trie-Tree-in-the-DB"><a href="#How-to-Store-Trie-Tree-in-the-DB" class="headerlink" title="How to Store Trie Tree in the DB"></a>How to Store Trie Tree in the DB</h2><h3 id="Stored-in-Document-DB"><a href="#Stored-in-Document-DB" class="headerlink" title="Stored in Document DB"></a>Stored in Document DB</h3><p>From <a target="_blank" rel="noopener" href="https://www.amazon.sg/System-Design-Interview-insiders-guide/dp/B08CMF2CQF/ref=asc_df_B08CMF2CQF/?tag=googleshoppin-22&linkCode=df0&hvadid=404658063268&hvpos=&hvnetw=g&hvrand=1585535126343690537&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9062543&hvtargid=pla-934212337151&psc=1">Alex Xu’s book</a>, the idea is to take a snapshot of the DB weekly and store the data into Document NoSQL like MongoDB.</p>
+<h3 id="Stored-in-KV-Store"><a href="#Stored-in-KV-Store" class="headerlink" title="Stored in KV Store"></a>Stored in KV Store</h3><table>
+<thead>
+<tr>
+<th><strong>Key</strong></th>
+<th><strong>Value</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>c</td>
+<td>[car: 30, cat:20, curry:10]</td>
+</tr>
+<tr>
+<td>ca</td>
+<td>[car:30, cat:20, canada:10]</td>
+</tr>
+</tbody></table>
+<p>This gives us a few advantages, such that we can access any prefix in O(1) time. This eliminates the tree traverse process in the memory. But it also increases the storage space because it loses the conventional trie’s ability to share common prefixes. A hashmap also requires more space to store the meta data such as load factor and map size.</p>
+<p><strong><a target="_blank" rel="noopener" href="https://medium.com/@prefixyteam/how-we-built-prefixy-a-scalable-prefix-search-service-for-powering-autocomplete-c20f98e2eff1">But again, we were more than willing to trade space for speed of reads.</a></strong></p>
+<p><img src="https://lo845xqmx7.feishu.cn/space/api/box/stream/download/asynccode/?code=NDhmNTYxYTVmM2RlODEzMzM5ZTY0N2JkNzFmZTU3YmZfUGFPOVlFQ2pMa0hKdzJSdld5WGpVTGRYRnF0NktXVWtfVG9rZW46Ym94Y25rMFlYdk51SDJ6YXR5UHBNYXpvVXloXzE2NzA3NjQxMDU6MTY3MDc2NzcwNV9WNA" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>We can use <strong>Redis</strong> <strong>&#x2F; Abase</strong> to store the trie data. To store the completion data, we could use Redis list or <strong>Redis Zset</strong>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Redis List</th>
+<th>Redis Zset</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Performance</td>
+<td>Search for O(1)Update for O(K)</td>
+<td>Search and Update for O(logK)</td>
+</tr>
+<tr>
+<td>Operation Complexity</td>
+<td>Need to take care of sorting and de-duping. When updating, it requires us to take two round trips with Redis, load all the lists and increase and insert the new entry in-place.</td>
+<td>Not require to take care the sorting and deduping logic.  The ZSET will maintain the order and uniqueness through skiplists.</td>
+</tr>
+<tr>
+<td>Commands</td>
+<td>LRANGE: Load all the list LREM: Remove the updated entryLINSERT: Insert new entry into the list</td>
+<td>ZRANGE: for search  ZINCRYBY: for update</td>
+</tr>
+</tbody></table>
+<h3 id="Cache-by-Redis-and-Persist-By-MongoDB"><a href="#Cache-by-Redis-and-Persist-By-MongoDB" class="headerlink" title="Cache by Redis and Persist By MongoDB"></a>Cache by Redis and Persist By MongoDB</h3><p>MongoDB is a key document NoSQL which fits well with the Redis KV model. Having similar models of abstraction among data stores is convenient, because it makes the persistence process easier to reason about.</p>
+<p>For the cache miss handling, we can implement Cache Aside Pattern. Note that the logic for searching in the event of cache miss only happens quite a few times, and when there’s cache miss it can quickly load the data into Redis so that the next query can hit the cache. Thus, the slower and more complicated logic for <strong>searching persistent stores</strong> only happens in a relatively small number of cases.</p>
+<h2 id="How-to-update-the-Trie-Tree"><a href="#How-to-update-the-Trie-Tree" class="headerlink" title="How to update the Trie Tree"></a>How to update the Trie Tree</h2><p>The query service can store the query history and periodically generates the analysis log based on the historical data. With this analysis log, we can build the Trie once and use it for a long time.</p>
+<p><img src="/../img/tech/system%20design/complete%20system/update_trie.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>But note that this mechanism is only feasible for the Google Search scenario where the auto complete suggestion does not require realtime update. For the Twitter auto complete scenario, you may want to figure out some faster way to update the Trie store.</p>
+<h2 id="How-to-partition-the-data-efficiently"><a href="#How-to-partition-the-data-efficiently" class="headerlink" title="How to partition the data efficiently"></a>How to partition the data efficiently</h2><p>The words starting with ‘s’ are more than the words starting with ‘x’ and this might cause sharding inbalance. To mitigate the problem of unevenly distributed characters.  We may introduce a shard manager to do the routing.</p>
+<p><img src="/../img/tech/system%20design/complete%20system/sharding.jpg" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h1 id="Wrap-Up"><a href="#Wrap-Up" class="headerlink" title="Wrap Up"></a>Wrap Up</h1><p>Some questions to think about:</p>
+<ul>
+<li>How do you extend your design to support multi-language?</li>
+</ul>
+<blockquote>
+<p>Hint: Unicode</p>
+</blockquote>
+<ul>
+<li>What if we want to do auto-complete based on different countries?</li>
+</ul>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://medium.com/@prefixyteam/how-we-built-prefixy-a-scalable-prefix-search-service-for-powering-autocomplete-c20f98e2eff1">Multi tenant solution</a></p>
+</blockquote>
+<ul>
+<li>How can we support real-time search queries?</li>
+</ul>
+<blockquote>
+<p>Update immediately</p>
+</blockquote>
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><p><a target="_blank" rel="noopener" href="https://www.amazon.sg/System-Design-Interview-Insiders-Guide/dp/1736049119/ref=asc_df_1736049119/?tag=googleshoppin-22&linkCode=df0&hvadid=405606626615&hvpos=&hvnetw=g&hvrand=5683234730197475962&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9062543&hvtargid=pla-1645933631661&psc=1">Alex Xu’ System Design Book</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.facebook.com/notes/10158791367817200/">FaceBook: The life of a typehead query</a></p>
+<p><a target="_blank" rel="noopener" href="https://medium.com/@prefixyteam/how-we-built-prefixy-a-scalable-prefix-search-service-for-powering-autocomplete-c20f98e2eff1">Medium: Auto completion system design</a></p>
+
+              
+            </div>
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/system-design/">#system design</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>complete_system</div>
+      <div>https://garygky.github.io/2022/12/11/complete-system/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>Kaiyuan Gan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>December 11, 2022</div>
+        </div>
+      
+      
+      <div class="license-meta-item">
+        <div>Licensed under</div>
+        <div>
+          
+            
+            
+              <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+              <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                <i class="iconfont icon-by"></i>
+              </span>
+              </a>
+            
+          
+        </div>
+      </div>
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/12/11/chat-system/" title="chat_system">
+                        <span class="hidden-mobile">chat_system</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  <article id="comments" lazyload>
+    
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-dark-orange';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'GaryGky/GaryGky.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+  </article>
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.0/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      headingSelector : CONFIG.toc.headingSelector || 'h1,h2,h3,h4,h5,h6',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      collapseDepth   : CONFIG.toc.collapseDepth || 0,
+      scrollSmooth    : true,
+      headingsOffset  : -boardTop
+    });
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+  });
+</script>
+
+
+  <script>
+  (function() {
+    var enableLang = CONFIG.code_language.enable && CONFIG.code_language.default;
+    var enableCopy = CONFIG.copy_btn;
+    if (!enableLang && !enableCopy) {
+      return;
+    }
+
+    function getBgClass(ele) {
+      return Fluid.utils.getBackgroundLightness(ele) >= 0 ? 'code-widget-light' : 'code-widget-dark';
+    }
+
+    var copyTmpl = '';
+    copyTmpl += '<div class="code-widget">';
+    copyTmpl += 'LANG';
+    copyTmpl += '</div>';
+    jQuery('.markdown-body pre').each(function() {
+      var $pre = jQuery(this);
+      if ($pre.find('code.mermaid').length > 0) {
+        return;
+      }
+      if ($pre.find('span.line').length > 0) {
+        return;
+      }
+
+      var lang = '';
+
+      if (enableLang) {
+        lang = CONFIG.code_language.default;
+        if ($pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2 && $pre.children().hasClass('hljs')) {
+          lang = $pre[0].children[0].classList[1];
+        } else if ($pre[0].getAttribute('data-language')) {
+          lang = $pre[0].getAttribute('data-language');
+        } else if ($pre.parent().hasClass('sourceCode') && $pre[0].children.length > 0 && $pre[0].children[0].classList.length >= 2) {
+          lang = $pre[0].children[0].classList[1];
+          $pre.parent().addClass('code-wrapper');
+        } else if ($pre.parent().hasClass('markdown-body') && $pre[0].classList.length === 0) {
+          $pre.wrap('<div class="code-wrapper"></div>');
+        }
+        lang = lang.toUpperCase().replace('NONE', CONFIG.code_language.default);
+      }
+      $pre.append(copyTmpl.replace('LANG', lang).replace('code-widget">',
+        getBgClass($pre[0]) + (enableCopy ? ' code-widget copy-btn" data-clipboard-snippet><i class="iconfont icon-copy"></i>' : ' code-widget">')));
+
+      if (enableCopy) {
+        Fluid.utils.createScript('https://lib.baomitu.com/clipboard.js/2.0.10/clipboard.min.js', function() {
+          var clipboard = new window.ClipboardJS('.copy-btn', {
+            target: function(trigger) {
+              var nodes = trigger.parentNode.childNodes;
+              for (var i = 0; i < nodes.length; i++) {
+                if (nodes[i].tagName === 'CODE') {
+                  return nodes[i];
+                }
+              }
+            }
+          });
+          clipboard.on('success', function(e) {
+            e.clearSelection();
+            e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-copy', 'icon-success');
+            setTimeout(function() {
+              e.trigger.innerHTML = e.trigger.innerHTML.replace('icon-success', 'icon-copy');
+            }, 2000);
+          });
+        });
+      }
+    });
+  })();
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
