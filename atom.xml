@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>甘凯元的博客</title>
+  
+  <subtitle>@NUS @TikTok</subtitle>
+  <link href="https://garygky.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://garygky.github.io/"/>
+  <updated>2022-12-11T13:24:42.360Z</updated>
+  <id>https://garygky.github.io/</id>
+  
+  <author>
+    <name>Kaiyuan Gan</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>complete_system</title>
+    <link href="https://garygky.github.io/2022/12/11/complete-system/"/>
+    <id>https://garygky.github.io/2022/12/11/complete-system/</id>
+    <published>2022-12-11T13:07:42.000Z</published>
+    <updated>2022-12-11T13:24:42.360Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;&lt;img</summary>
+        
+      
+    
+    
+    
+    
+    <category term="system design" scheme="https://garygky.github.io/tags/system-design/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>chat_system</title>
+    <link href="https://garygky.github.io/2022/12/11/chat-system/"/>
+    <id>https://garygky.github.io/2022/12/11/chat-system/</id>
+    <published>2022-12-11T13:07:21.000Z</published>
+    <updated>2022-12-11T13:17:58.280Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;IM-系统的历史&quot;&gt;&lt;a href=&quot;#IM-系统的历史&quot; class=&quot;headerlink&quot; title=&quot;IM 系统的历史&quot;&gt;&lt;/a&gt;IM</summary>
+        
+      
+    
+    
+    
+    
+    <category term="system design" scheme="https://garygky.github.io/tags/system-design/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>troubles_in_distributed</title>
+    <link href="https://garygky.github.io/2022/11/15/troubles-in-distributed/"/>
+    <id>https://garygky.github.io/2022/11/15/troubles-in-distributed/</id>
+    <published>2022-11-15T13:46:01.000Z</published>
+    <updated>2022-11-15T13:48:43.197Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;Faults-amp-Partial-Failures&quot;&gt;&lt;a href=&quot;#Faults-amp-Partial-Failures&quot; class=&quot;headerlink&quot; title=&quot;Faults &amp;amp; Partial</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed System" scheme="https://garygky.github.io/tags/Distributed-System/"/>
+    
+    <category term="DDIA" scheme="https://garygky.github.io/tags/DDIA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>refactoring</title>
+    <link href="https://garygky.github.io/2022/11/03/refactoring/"/>
+    <id>https://garygky.github.io/2022/11/03/refactoring/</id>
+    <published>2022-11-03T02:08:47.000Z</published>
+    <updated>2022-11-03T02:14:45.946Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Bad-Smells-in-code&quot;&gt;&lt;a href=&quot;#Bad-Smells-in-code&quot; class=&quot;headerlink&quot; title=&quot;Bad Smells in code&quot;&gt;&lt;/a&gt;Bad Smells in code&lt;/h1&gt;&lt;h2</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Refactoring" scheme="https://garygky.github.io/tags/Refactoring/"/>
+    
+    <category term="Engineering" scheme="https://garygky.github.io/tags/Engineering/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>interview-guide</title>
+    <link href="https://garygky.github.io/2022/11/03/interview-guide/"/>
+    <id>https://garygky.github.io/2022/11/03/interview-guide/</id>
+    <published>2022-11-03T02:08:16.000Z</published>
+    <updated>2022-11-03T02:12:52.338Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;程序员面试&quot;&gt;&lt;a href=&quot;#程序员面试&quot; class=&quot;headerlink&quot; title=&quot;程序员面试&quot;&gt;&lt;/a&gt;程序员面试&lt;/h1&gt;&lt;h3 id=&quot;了解面试流程&quot;&gt;&lt;a href=&quot;#了解面试流程&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Interview" scheme="https://garygky.github.io/tags/Interview/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>stream-processing</title>
+    <link href="https://garygky.github.io/2022/11/03/stream-processing/"/>
+    <id>https://garygky.github.io/2022/11/03/stream-processing/</id>
+    <published>2022-11-03T01:56:34.000Z</published>
+    <updated>2022-11-03T02:15:09.374Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;Stream-Processing&quot;&gt;&lt;a href=&quot;#Stream-Processing&quot; class=&quot;headerlink&quot; title=&quot;Stream Processing&quot;&gt;&lt;/a&gt;Stream Processing&lt;/h1&gt;&lt;p&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed System" scheme="https://garygky.github.io/tags/Distributed-System/"/>
+    
+    <category term="Big Data" scheme="https://garygky.github.io/tags/Big-Data/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Scalable SQL and NoSQL Data Stores</title>
+    <link href="https://garygky.github.io/2022/10/04/nosql/"/>
+    <id>https://garygky.github.io/2022/10/04/nosql/</id>
+    <published>2022-10-04T13:45:24.000Z</published>
+    <updated>2022-10-04T13:50:29.087Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Motivated by &lt;strong&gt;Web 2.0&lt;/strong&gt;, the application was designed to support thousands of millions of users write and read</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="NoSQL" scheme="https://garygky.github.io/tags/NoSQL/"/>
+    
+    <category term="RDMS" scheme="https://garygky.github.io/tags/RDMS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Distributed Lock</title>
+    <link href="https://garygky.github.io/2022/06/10/DistributedLock/"/>
+    <id>https://garygky.github.io/2022/06/10/DistributedLock/</id>
+    <published>2022-06-10T02:35:23.000Z</published>
+    <updated>2022-07-25T07:29:33.954Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;Introduction&quot;&gt;&lt;a href=&quot;#Introduction&quot; class=&quot;headerlink&quot; title=&quot;Introduction&quot;&gt;&lt;/a&gt;Introduction&lt;/h2&gt;&lt;h2 id=&quot;Scenario&quot;&gt;&lt;a</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed System" scheme="https://garygky.github.io/tags/Distributed-System/"/>
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="NoSQL" scheme="https://garygky.github.io/tags/NoSQL/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>SegmentQuery</title>
+    <link href="https://garygky.github.io/2022/06/06/SegmentQuery/"/>
+    <id>https://garygky.github.io/2022/06/06/SegmentQuery/</id>
+    <published>2022-06-06T04:02:19.000Z</published>
+    <updated>2022-07-25T07:29:33.956Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;区间问题&quot;&gt;&lt;a href=&quot;#区间问题&quot; class=&quot;headerlink&quot; title=&quot;区间问题&quot;&gt;&lt;/a&gt;区间问题&lt;/h1&gt;&lt;h2 id=&quot;QuickView&quot;&gt;&lt;a href=&quot;#QuickView&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Algorithm" scheme="https://garygky.github.io/tags/Algorithm/"/>
+    
+    <category term="High Advanced DS" scheme="https://garygky.github.io/tags/High-Advanced-DS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>记一次面试算法题准备过程</title>
+    <link href="https://garygky.github.io/2022/06/03/OnceInterviewPreparation/"/>
+    <id>https://garygky.github.io/2022/06/03/OnceInterviewPreparation/</id>
+    <published>2022-06-03T04:08:40.000Z</published>
+    <updated>2022-07-25T07:29:33.955Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h2 id=&quot;我面试之前是如何准备算法题的&quot;&gt;&lt;a href=&quot;#我面试之前是如何准备算法题的&quot; class=&quot;headerlink&quot;</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Leetcode" scheme="https://garygky.github.io/tags/Leetcode/"/>
+    
+    <category term="Interview" scheme="https://garygky.github.io/tags/Interview/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>spanner</title>
+    <link href="https://garygky.github.io/2022/05/31/spanner/"/>
+    <id>https://garygky.github.io/2022/05/31/spanner/</id>
+    <published>2022-05-31T13:25:08.000Z</published>
+    <updated>2022-07-25T07:29:33.958Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Spanner: Google’s Globally-Distributed Database&lt;br&gt;前言：个人感觉这篇paper组织的逻辑比 Dynamo和GFS</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="NoSQL" scheme="https://garygky.github.io/tags/NoSQL/"/>
+    
+    <category term="Google" scheme="https://garygky.github.io/tags/Google/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>MapReduce</title>
+    <link href="https://garygky.github.io/2022/05/22/MapReduce/"/>
+    <id>https://garygky.github.io/2022/05/22/MapReduce/</id>
+    <published>2022-05-22T05:04:06.000Z</published>
+    <updated>2022-07-25T07:29:33.955Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;MapReduce&lt;br&gt;Abstract: A high-level idea of Map-Reduce&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Map&lt;br&gt;用户使用Map函数计算出一系列的中间 K-V pairs&lt;/li&gt;
+&lt;li&gt;Reduce&lt;br&gt;Reduce</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Google" scheme="https://garygky.github.io/tags/Google/"/>
+    
+    <category term="Distribtued System" scheme="https://garygky.github.io/tags/Distribtued-System/"/>
+    
+    <category term="Distributed Computing" scheme="https://garygky.github.io/tags/Distributed-Computing/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Twitter 缓存应用分析</title>
+    <link href="https://garygky.github.io/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/"/>
+    <id>https://garygky.github.io/2022/05/22/Twitter-%E7%BC%93%E5%AD%98%E5%BA%94%E7%94%A8%E5%88%86%E6%9E%90/</id>
+    <published>2022-05-22T05:03:57.000Z</published>
+    <updated>2022-07-25T07:29:33.957Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Twitter 缓存应用分析&lt;/p&gt;
+&lt;p&gt;为了更好的阅读体验，请移步至 &lt;a</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="Twitter" scheme="https://garygky.github.io/tags/Twitter/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>VM-FT</title>
+    <link href="https://garygky.github.io/2022/05/22/VM-FT/"/>
+    <id>https://garygky.github.io/2022/05/22/VM-FT/</id>
+    <published>2022-05-22T05:02:09.000Z</published>
+    <updated>2022-07-25T07:29:33.957Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;VM-FT&lt;br&gt;本文是由VMWare于2010 年提出的一个虚拟机容错解决方案，使用的是一个Primary-BackUp的架构。&lt;/p&gt;
+&lt;p&gt;推荐阅读：为了更好的阅读体验，请移步至飞书 &lt;a</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed System" scheme="https://garygky.github.io/tags/Distributed-System/"/>
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Partition</title>
+    <link href="https://garygky.github.io/2022/05/22/Partition/"/>
+    <id>https://garygky.github.io/2022/05/22/Partition/</id>
+    <published>2022-05-22T05:01:54.000Z</published>
+    <updated>2022-07-25T07:29:33.956Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Partition的目标是用来提升读写的请求吞吐的，每一个Partition保留的整个数据集的一部分，针对不同数据的请求会被路由到不同的Partition中&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;MongoDB，ES，SolrCloud中的Shard&lt;/li&gt;
+&lt;li&gt;HBase中的</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="DDIA" scheme="https://garygky.github.io/tags/DDIA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Transaction</title>
+    <link href="https://garygky.github.io/2022/05/22/Transaction/"/>
+    <id>https://garygky.github.io/2022/05/22/Transaction/</id>
+    <published>2022-05-22T05:01:43.000Z</published>
+    <updated>2022-07-25T07:29:33.957Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Transaction&lt;br&gt;几乎所有的关系型数据库和部分NoSQL能够提供事务支持，早在1975年IBM提出的第一个SQL系统System-R中，介绍了事务的概念。虽然在过去的40年中，事务的实现方式改变了许多，但是其基本的思想与40年前的System-R几乎是一致的</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="DDIA" scheme="https://garygky.github.io/tags/DDIA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Dynamo</title>
+    <link href="https://garygky.github.io/2022/05/22/Dynamo/"/>
+    <id>https://garygky.github.io/2022/05/22/Dynamo/</id>
+    <published>2022-05-22T04:40:45.000Z</published>
+    <updated>2022-07-25T07:29:33.954Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Dynamo: Amazon’s High Available KV Store&lt;/p&gt;
+&lt;p&gt;DynamoDB是Amazon平台上构建的 “always on” availability 级别的NoSQL数据库，并且能做到无缝扩展</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="NoSQL" scheme="https://garygky.github.io/tags/NoSQL/"/>
+    
+    <category term="Amazon" scheme="https://garygky.github.io/tags/Amazon/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>GFS</title>
+    <link href="https://garygky.github.io/2022/05/22/Google%20File%20System/"/>
+    <id>https://garygky.github.io/2022/05/22/Google%20File%20System/</id>
+    <published>2022-05-22T04:18:25.000Z</published>
+    <updated>2022-07-25T07:29:33.955Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;p&gt;Google File System&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;分布式文件系统，弱一致性模型 (Relaxed</summary>
+        
+      
+    
+    
+    
+    
+    <category term="Distributed Storage" scheme="https://garygky.github.io/tags/Distributed-Storage/"/>
+    
+    <category term="Google" scheme="https://garygky.github.io/tags/Google/"/>
+    
+    <category term="File System" scheme="https://garygky.github.io/tags/File-System/"/>
+    
+  </entry>
+  
+</feed>
